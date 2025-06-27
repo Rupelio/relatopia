@@ -26,24 +26,52 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Email atual</label>
                                 <div class="bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-600">
-                                    usuario@email.com
+                                    {{ auth()->user()->email }}
                                 </div>
                             </div>
 
                             <!-- Alterar senha -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Nova senha</label>
-                                <input type="password" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200" placeholder="Digite sua nova senha">
-                            </div>
+                            <form>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Senha atual</label>
+                                    <input type="password"
+                                        name="current_password"
+                                        id="current_password"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+                                        placeholder="Digite sua senha"
+                                        required>
+                                    <div id="current_password_error" class="text-red-500 text-sm mt-1 hidden"></div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Nova senha</label>
+                                    <input type="password" name="new_password" id="new_password" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200" placeholder="Digite sua nova senha" required>
+                                    <div id="new_password_error" class="text-red-500 text-sm mt-1 hidden"></div>
+                                </div>
 
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Confirmar nova senha</label>
-                                <input type="password" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200" placeholder="Confirme sua nova senha">
-                            </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Confirmar nova senha</label>
+                                    <input type="password"
+                                        name="new_password_confirmation"
+                                        id="new_password_confirmation"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+                                        placeholder="Confirme sua nova senha"
+                                        required>
+                                    <div id="confirm_password_error" class="text-red-500 text-sm mt-1 hidden"></div>
+                                </div>
 
-                            <button class="bg-emerald-600 text-white px-6 py-2 rounded-lg hover:bg-emerald-700 transition-colors duration-200 font-medium">
-                                Alterar Senha
-                            </button>
+                                <button type="submit"
+                                        id="changePasswordBtn"
+                                        class="bg-emerald-600 text-white px-6 py-2 rounded-lg hover:bg-emerald-700 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <span id="btnText">Alterar Senha</span>
+                                    <span id="btnLoading" class="hidden">
+                                        <svg class="animate-spin -ml-1 mr-3 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Alterando...
+                                    </span>
+                                </button>
+                            </form>
                         </div>
                     </div>
 

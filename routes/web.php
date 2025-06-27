@@ -16,6 +16,7 @@ Route::match(['GET', 'POST'], '/cadastro', CadastroController::class)->name('cad
 Route::middleware('auth')->group(function () {
     // Dashboard
     Route::get('/dashboard', InterfaceUsuarioController::class)->name('dashboard');
+    Route::get('/perfil', PerfilUsuarioController::class)->name('perfil');
 
     // Logout
     Route::post('/logout', function () {

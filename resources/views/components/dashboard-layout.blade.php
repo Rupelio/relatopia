@@ -19,7 +19,7 @@
             <div class="flex justify-between items-center h-16">
                 <!-- Logo -->
                 <div class="flex items-center">
-                    <a href="/dashboard" class="flex items-center hover:opacity-80 transition-opacity duration-200">
+                    <a href="{{ route('dashboard') }}" class="flex items-center hover:opacity-80 transition-opacity duration-200">
                         <img class="h-8 w-auto" src="/relatopia.png" alt="Relatopia">
                     </a>
                 </div>
@@ -27,12 +27,12 @@
                 <!-- Menu de navegação -->
                 <div class="flex items-center space-x-6">
                     <div class="flex items-center space-x-6">
-                    <a href="/dashboard" class="text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-emerald-50">
+                    <a href="{{ route('dashboard') }}" class="text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-emerald-50">
                         Dashboard
                     </a>
-                    {{-- <a href="/perfil" class="text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-emerald-50">
+                    <a href="{{ route('perfil') }}" class="text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-emerald-50">
                         Perfil
-                    </a> --}}
+                    </a>
 
                     <!-- Botão Sair com transição verde → vermelho -->
                     <form method="POST" action="{{ route('logout') }}" class="inline">
