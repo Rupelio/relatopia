@@ -173,6 +173,9 @@
                 document.querySelector('[data-stat="nossos_desejos"]').textContent = estatisticas.nossos_desejos;
                 document.querySelector('[data-stat="melhorar_mim"]').textContent = estatisticas.melhorar_mim;
                 document.querySelector('[data-stat="melhorar_juntos"]').textContent = estatisticas.melhorar_juntos;
+                document.querySelector('[data-stat="total_itens"]').textContent = estatisticas.total_itens;
+                document.querySelector('[data-stat="total_melhorias"]').textContent = estatisticas.total_melhorias;
+                document.querySelector('[data-stat="total_desejos"]').textContent = estatisticas.total_desejos;
 
             } catch (error) {
 
@@ -531,19 +534,19 @@
             <h2 class="text-2xl font-bold text-gray-800 mb-4">Resumo do Relacionamento</h2>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div class="text-center">
-                    <div class="text-3xl font-bold text-emerald-600">{{ $estatisticas['total_itens'] }}</div>
+                    <span class="text-3xl font-bold text-emerald-600" data-stat="total_itens">{{ $estatisticas['total_itens'] }}</span>
                     <div class="text-sm text-gray-600">Total de itens</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-3xl font-bold text-green-600">{{ $estatisticas['positivos'] }}</div>
+                    <span class="text-3xl font-bold text-green-600" data-stat="positivos">{{ $estatisticas['positivos'] }}</span>
                     <div class="text-sm text-gray-600">Pontos positivos</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-3xl font-bold text-yellow-600">{{ $estatisticas['total_melhorias'] }}</div>
+                    <span class="text-3xl font-bold text-yellow-600" data-stat="total_melhorias">{{ $estatisticas['total_melhorias'] }}</span>
                     <div class="text-sm text-gray-600">Para melhorar</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-3xl font-bold text-purple-600">{{ $estatisticas['total_desejos'] }}</div>
+                    <span class="text-3xl font-bold text-purple-600" data-stat="total_desejos">{{ $estatisticas['total_desejos'] }}</span>
                     <div class="text-sm text-gray-600">Desejos totais</div>
                 </div>
             </div>
