@@ -31,14 +31,15 @@
                             </div>
 
                             <!-- Alterar senha -->
-                            <form>
+                            <form id="changePasswordForm" class="space-y-4">
+                                @csrf
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Senha atual</label>
                                     <input type="password"
                                         name="current_password"
                                         id="current_password"
                                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
-                                        placeholder="Digite sua senha"
+                                        placeholder="Digite sua senha atual"
                                         required>
                                     <div id="current_password_error" class="text-red-500 text-sm mt-1 hidden"></div>
                                 </div>
@@ -91,26 +92,33 @@
 
                         <div class="bg-gray-50 rounded-lg p-6 space-y-4">
                             <!-- Data de início -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Data de início do relacionamento</label>
-                                <input type="date" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200">
-                            </div>
+                            <form id="relationshipForm" class="space-y-4">
+                                @csrf
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Data de início do relacionamento</label>
+                                    <input type="date"
+                                        name="data_inicio"
+                                        value="{{ auth()->user()->data_inicio_relacionamento?->format('Y-m-d') }}"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200">
+                                </div>
 
-                            <!-- Status do relacionamento -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                                <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200">
-                                    <option value="">Selecione o status</option>
-                                    <option value="namoro">Namoro</option>
-                                    <option value="noivado">Noivado</option>
-                                    <option value="casamento">Casamento</option>
-                                    <option value="uniao-estavel">União Estável</option>
-                                </select>
-                            </div>
+                                <!-- Status do relacionamento -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                                    <select name="status"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200">
+                                        <option value="">Selecione o status</option>
+                                        <option value="namoro" {{ auth()->user()->status_relacionamento == 'namoro' ? 'selected' : '' }}>Namoro</option>
+                                        <option value="noivado" {{ auth()->user()->status_relacionamento == 'noivado' ? 'selected' : '' }}>Noivado</option>
+                                        <option value="casamento" {{ auth()->user()->status_relacionamento == 'casamento' ? 'selected' : '' }}>Casamento</option>
+                                        <option value="uniao-estavel" {{ auth()->user()->status_relacionamento == 'uniao-estavel' ? 'selected' : '' }}>União Estável</option>
+                                    </select>
+                                </div>
 
-                            <button class="bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700 transition-colors duration-200 font-medium">
-                                Salvar Informações
-                            </button>
+                                <button type="submit" class="bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700 transition-colors duration-200 font-medium">
+                                    Salvar Informações
+                                </button>
+                            </form>
                         </div>
                     </div>
 
@@ -146,11 +154,164 @@
     </div>
 
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('changePasswordForm');
+            const currentPasswordInput = document.getElementById('current_password');
+            const newPasswordInput = document.getElementById('new_password');
+            const confirmPasswordInput = document.getElementById('new_password_confirmation');
+            const submitBtn = document.getElementById('changePasswordBtn');
+
+            newPasswordInput.addEventListener('input', validateNewPassword);
+            confirmPasswordInput.addEventListener('input', validatePasswordConfirmation);
+
+            function validateNewPassword(){
+                const password = newPasswordInput.value;
+                const errorDiv = document.getElementById('new_password_error');
+
+                if(password.length > 0 && password.length < 6){
+                    showError('new_password_error', 'A senha deve ter pelo menos 6 caracteres');
+                    return false;
+                } else {
+                    hideError('new_password_error');
+                    return true;
+                }
+            }
+
+            function validatePasswordConfirmation(){
+                const password = newPasswordInput.value;
+                const confirmation = confirmPasswordInput.value;
+
+                if(confirmation.length > 0 && password !== confirmation){
+                    showError('confirm_password_error', 'As senhas não coincidem');
+                    return false;
+                } else {
+                    hideError('confirm_password_error');
+                    return true;
+                }
+            }
+
+            function showError(elementId, message){
+                const errorDiv = document.getElementById(elementId);
+                errorDiv.textContent = message;
+                errorDiv.classList.remove('hidden');
+
+                const input = errorDiv.previousElementSibling;
+                input.classList.add('border-red-500');
+                input.classList.remove('border-gray-300');
+            }
+
+            function hideError(elementId){
+                const errorDiv = document.getElementById(elementId);
+                errorDiv.classList.add('hidden');
+                errorDiv.textContent = '';
+
+                const input = errorDiv.previousElementSibling;
+                input.classList.remove('border-red-500');
+                input.classList.add('border-gray-300');
+            }
+
+            form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+
+                if(!validateNewPassword() || !validatePasswordConfirmation()){
+                    return;
+                }
+
+                const currentPassword = currentPasswordInput.value;
+                const newPassword = newPasswordInput.value;
+                const confirmPassword = confirmPasswordInput.value;
+
+                if(!currentPassword || !newPassword || !confirmPassword){
+                    showNotification('Por favor, preencha todos os campos', 'warning');
+                    return;
+                }
+
+                setLoading(true);
+
+                try{
+                    const response = await fetch('/api/alterar-senha', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify({
+                            current_password: currentPassword,
+                            new_password: newPassword,
+                            new_password_confirmation: confirmPassword
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if(response.ok){
+                        showNotification('Senha alterada com sucesso!', 'success');
+                        form.reset();
+                        hideError('current_password_error');
+                        hideError('new_password_error');
+                        hideError('confirm_password_error');
+                    } else {
+                        if(data.errors){
+                            if(data.errors.current_password){
+                                showError('current_password_error', data.errors.current_password[0])
+                            }
+                            if (data.errors.new_password) {
+                                showError('new_password_error', data.errors.new_password[0]);
+                            }
+                        } else if(data.message){
+                            showNotification(data.message, 'error');
+                        } else {
+                            showNotification('Erro ao alterar senha. Tente novamente.', 'error');
+                        }
+                    }
+                } catch(error){
+                    console.error('Erro:', error);
+                    showNotification('Erro de conexão. Verifique sua internet e tente novamente.', 'error')
+                } finally{
+                    setLoading(false);
+                }
+            });
+            function setLoading(loading){
+                const btnText = document.getElementById('btnText');
+                const btnLoading = document.getElementById('btnLoading');
+
+                if (loading) {
+                    btnText.classList.add('hidden');
+                    btnLoading.classList.remove('hidden');
+                    submitBtn.disabled = true;
+                } else {
+                    btnText.classList.remove('hidden');
+                    btnLoading.classList.add('hidden');
+                    submitBtn.disabled = false;
+                }
+            }
+        })
+        document.getElementById('relationshipForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            try{
+                const response = await fetch('/api/relacionamento',{
+                    method: 'POST',
+                    headers:{
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: formData
+                });
+                if(response.ok){
+                    showNotification('Informações salvas com sucesso!', 'success');
+                } else {
+                    const data = await response.json();
+                    showNotification(data.message || 'Erro ao salvar', 'error');
+                }
+            } catch(error){
+                showNotification('Erro ao salvar informações', 'error')
+            }
+        });
         function confirmDelete() {
             if (confirm('Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita e todos os seus dados serão perdidos.')) {
                 if (confirm('Última confirmação: Realmente deseja excluir sua conta permanentemente?')) {
                     // Aqui faria a requisição para excluir a conta
-                    alert('Funcionalidade de exclusão será implementada');
+                    showNotification('Ainda está sendo desenvolvida', 'warning');
                 }
             }
         }

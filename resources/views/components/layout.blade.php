@@ -38,5 +38,27 @@
         <div class="container mx-auto px-4 pt-16">
             {{ $slot }}
         </div>
+        <footer class="bg-gradient-to-r from-emerald-50 to-teal-50 border-t border-emerald-100 py-3">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
+                    <!-- Texto principal -->
+                    <div class="text-center sm:text-left">
+                        <p class="text-xs sm:text-sm text-emerald-700 font-medium">
+                            Created by
+                            <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600 font-semibold">
+                                Rupelio
+                            </span>
+                        </p>
+                    </div>
+
+                    <!-- Decoração opcional -->
+                    <div class="flex items-center space-x-1">
+                        <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                        <div class="w-1.5 h-1.5 bg-teal-400 rounded-full animate-pulse delay-100"></div>
+                        <div class="w-1 h-1 bg-emerald-300 rounded-full animate-pulse delay-200"></div>
+                    </div>
+                </div>
+            </div>
+        </footer>
     </body>
 </html>

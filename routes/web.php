@@ -16,7 +16,7 @@ Route::match(['GET', 'POST'], '/cadastro', CadastroController::class)->name('cad
 Route::middleware('auth')->group(function () {
     // Dashboard
     Route::get('/dashboard', InterfaceUsuarioController::class)->name('dashboard');
-    Route::get('/perfil', PerfilUsuarioController::class)->name('perfil');
+    Route::get('/perfil', [PerfilUsuarioController::class, 'index'])->name('perfil');
 
     // Logout
     Route::post('/logout', function () {
@@ -31,5 +31,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/relacionamento-itens/{id}/toggle', [RelacionamentoItemController::class, 'toggleResolved']);
         Route::delete('/relacionamento-itens/{id}', [RelacionamentoItemController::class, 'destroy']);
         Route::get('/estatisticas', [RelacionamentoItemController::class, 'estatisticas']);
+        Route::post('/alterar-senha', [PerfilUsuarioController::class, 'alterarSenha']);
+        Route::post('/relacionamento', [PerfilUsuarioController::class, 'atualizarRelacionamento']);
     });
 });
