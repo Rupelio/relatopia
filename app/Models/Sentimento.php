@@ -57,8 +57,7 @@ class Sentimento extends Model
         return self::where('user_id', $userId)
                     ->where('horario', '>=', $dataInicio)
                     ->where('horario', '<=', $dataFim)
-                    ->orderBy('horario', 'desc')
-                    ->get();
+                    ->orderBy('horario', 'desc');
     }
     public static function recentes($userId, $limite = 5){
         return self::where('user_id', $userId)

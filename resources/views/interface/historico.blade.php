@@ -1,4 +1,37 @@
 <x-dashboard-layout title="Histórico de Sentimentos">
+    <script>
+        async function editarSentimento(id){
+            try{
+                const response = await fetch(`/api/sentimento/${id}`);
+                if (!response.ok) throw new Error('Erro ao buscar sentimento');
+                const sentimento = await response.json();
+
+                // Preencher campos do modal
+                document.getElementById('sentimentoId').value = sentimento.id;
+                document.getElementById('horarioAtual').value = sentimento.horario ? sentimento.horario.slice(11,16) : '';
+                document.getElementById('tipoSentimento').value = sentimento.tipo_sentimento;
+                document.getElementById('nivelIntensidade').value = sentimento.nivel_intensidade;
+                document.getElementById('nivelDisplay').textContent = sentimento.nivel_intensidade;
+                document.getElementById('descricaoMotivo').value = sentimento.descricao;
+
+                // Abrir modal
+                const modalSentiment = document.getElementById('sentimentModal');
+                const sentimentContent = document.getElementById('sentimentModalContent');
+                modalSentiment.classList.remove('hidden');
+                modalSentiment.classList.add('flex');
+                setTimeout(() => {
+                    sentimentContent.classList.remove('scale-95', 'opacity-0');
+                    sentimentContent.classList.add('scale-100', 'opacity-100');
+                }, 10);
+
+                document.getElementById('nivelIntensidade').addEventListener('input', function() {
+                    document.getElementById('nivelDisplay').textContent = this.value;
+                });
+            } catch(error) {
+                showNotification('Erro ao carregar sentimento para edição', 'error');
+            }
+        }
+    </script>
     @php
     $emojis = [
         'feliz' => '😊',
@@ -64,35 +97,36 @@
             </div>
 
             <!-- Filtros -->
-            <div class="bg-white rounded-xl shadow-sm border border-orange-100 p-6 mb-6">
+            <form method="GET" action="{{ route('historico') }}" class="bg-white rounded-xl shadow-sm border border-orange-100 p-6 mb-6">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Filtros</h3>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Data início</label>
-                        <input type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                        <input type="date" name="data_inicio" value="{{ request('data_inicio') }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Data fim</label>
-                        <input type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                        <input type="date" name="data_fim" value="{{ request('data_fim') }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Sentimento</label>
-                        <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                        <select name="tipo_sentimento" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
                             <option value="">Todos</option>
-                            <option value="feliz">😊 Feliz</option>
-                            <option value="triste">😢 Triste</option>
-                            <option value="ansioso">😰 Ansioso</option>
-                            <option value="calmo">😌 Calmo</option>
-                            <option value="raiva">😠 Com raiva</option>
+                            <option value="feliz" {{ request('tipo_sentimento') == 'feliz' ? 'selected' : '' }}>😊 Feliz</option>
+                            <option value="triste" {{ request('tipo_sentimento') == 'triste' ? 'selected' : '' }}>😢 Triste</option>
+                            <option value="ansioso" {{ request('tipo_sentimento') == 'ansioso' ? 'selected' : '' }}>😰 Ansioso</option>
+                            <option value="calmo" {{ request('tipo_sentimento') == 'calmo' ? 'selected' : '' }}>😌 Calmo</option>
+                            <option value="raiva" {{ request('tipo_sentimento') == 'raiva' ? 'selected' : '' }}>😠 Com raiva</option>
+                            <!-- Adicione outros sentimentos se quiser -->
                         </select>
                     </div>
                     <div class="flex items-end">
-                        <button class="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors duration-200">
+                        <button type="submit" class="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors duration-200">
                             Filtrar
                         </button>
                     </div>
                 </div>
-            </div>
+            </form>
 
             <!-- Lista de Registros -->
             <div class="space-y-4">
@@ -121,41 +155,34 @@
                                 <span class="px-2 py-1 bg-{{ $cor }}-100 text-{{ $cor }}-800 text-xs rounded-full">
                                     {{ $sentimento->nivel_intensidade }}/10
                                 </span>
+                                <button onclick="editarSentimento({{ $sentimento->id }})"
+                                        class="text-gray-400 hover:text-orange-600 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                </button>
                             </div>
                         </div>
                     </div>
                 @empty
-                <!-- Estado vazio (quando não há registros) -->
-                <div class="hidden bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center" id="emptyState">
-                    <div class="text-6xl mb-4">📊</div>
-                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Nenhum registro encontrado</h3>
-                    <p class="text-gray-600 mb-6">Comece registrando seus sentimentos para acompanhar seus padrões emocionais</p>
-                    <a href="/dashboard" class="inline-flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors duration-200">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
-                        Registrar Sentimento
-                    </a>
-                </div>
-
+                    <!-- Estado vazio (quando não há registros) -->
+                    <div class="hidden bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center" id="emptyState">
+                        <div class="text-6xl mb-4">📊</div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Nenhum registro encontrado</h3>
+                        <p class="text-gray-600 mb-6">Comece registrando seus sentimentos para acompanhar seus padrões emocionais</p>
+                        <a href="/dashboard" class="inline-flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors duration-200">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Registrar Sentimento
+                        </a>
+                    </div>
                 @endforelse
-
-
             </div>
-
             <!-- Paginação -->
             <div class="flex justify-center mt-8">
-                <nav class="flex items-center space-x-2">
-                    <button class="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 disabled:opacity-50" disabled>
-                        Anterior
-                    </button>
-                    <button class="px-3 py-2 text-sm bg-orange-600 text-white rounded">1</button>
-                    <button class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 rounded hover:bg-gray-100">2</button>
-                    <button class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 rounded hover:bg-gray-100">3</button>
-                    <button class="px-3 py-2 text-sm text-gray-500 hover:text-gray-700">
-                        Próximo
-                    </button>
-                </nav>
+                {{ $sentimentos->links() }}
             </div>
         </div>
     </div>

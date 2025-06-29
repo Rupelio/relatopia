@@ -38,6 +38,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/relacionamento', [PerfilUsuarioController::class, 'atualizarRelacionamento']);
         Route::post('/sentimento', [SentimentoController::class, 'store']);
         Route::get('/sentimento', [SentimentoController::class, 'index']);
+        Route::put('/sentimento/{id}', [SentimentoController::class, 'update']);
+        Route::get('/sentimento/{id}', [SentimentoController::class, 'show']);
         Route::get('/estatisticasSentimento', [SentimentoController::class, 'estatisticasSentimento']);
     });
 });

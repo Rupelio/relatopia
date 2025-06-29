@@ -24,61 +24,6 @@
                 document.getElementById('nivelDisplay').textContent = this.value;
             });
         }
-        function closeSentimentModal(){
-            const modalSentiment = document.getElementById('sentimentModal');
-            const sentimentContent = document.getElementById('sentimentModalContent');
-
-            modalSentiment.classList.add('hidden');
-            modalSentiment.classList.remove('flex');
-
-            setTimeout(() => {
-                sentimentContent.classList.add('scale-95', 'opacity-0');
-                sentimentContent.classList.remove('scale-100', 'opacity-100');
-            }, 10);
-        }
-        async function submitSentiment(event) {
-            event.preventDefault();
-
-            const tipoSentimento = document.getElementById('tipoSentimento').value;
-            const nivelIntensidade = document.getElementById('nivelIntensidade').value;
-            const horario = document.getElementById('horarioAtual').value;
-            const descricao = document.getElementById('descricaoMotivo').value.trim();
-
-            if (!tipoSentimento) {
-                showNotification('Por favor, selecione como você está se sentindo', 'warning');
-                return;
-            }
-            if (!descricao) {
-                showNotification('Por favor, adicione uma descrição para continuar', 'warning');
-                return;
-            }
-            try{
-                const response = await fetch('/api/sentimento',{
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: JSON.stringify({
-                        tipo_sentimento: tipoSentimento,
-                        nivel_intensidade: nivelIntensidade,
-                        descricao: descricao,
-                        horario: horario
-                    })
-                });
-                if(response.ok){
-                    showNotification('Sentimento registrado com sucesso!', 'success');
-                    closeSentimentModal();
-                    await atualizarEstatisticas();
-                } else {
-                    const error = await response.json();
-                    showNotification('Erro ao salvar: ' + (error.message || 'Algo deu errado'), 'error');
-                }
-            } catch(error){
-                console.error('Erro:', error);
-                showNotification('Erro de conexão. Verifique sua internet e tente novamente.', 'error');
-            }
-        }
 
         function openModal(category, title, color){
             currentCategory = category;
@@ -146,6 +91,7 @@
         }
         async function atualizarEstatisticas() {
             try {
+
                 const response = await fetch('/api/estatisticas');
                 const estatisticas = await response.json();
 
@@ -530,7 +476,7 @@
                     <p class="text-gray-600 text-sm mb-4">Registre como você se sente no momento e acompanhe seus padrões emocionais</p>
                     <div class="mb-3">
                         <div class="text-xs text-gray-500 mb-1">Último sentimento:</div>
-                        <div class="text-sm font-medium text-orange-700" id="ultimoSentimento">
+                        <div class="text-sm font-medium text-orange-700" id="ultimoSentimento" data-stat="ultimo_sentimento">
                             {{ $estatisticas['sentimentos']['ultimo'] ? ucfirst($estatisticas['sentimentos']['ultimo']->tipo_sentimento) . " • Intensidade " . $estatisticas['sentimentos']['ultimo']->nivel_intensidade . "/10" : 'Nenhum registro ainda' }}
                         </div>
                     </div>
@@ -598,75 +544,6 @@
                 </button>
                 <button type="submit" id="submitBtn" class="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors duration-200">
                     Adicionar
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-<!-- Modal para registrar sentimentos -->
-<div id="sentimentModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 items-center justify-center hidden">
-    <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" id="sentimentModalContent">
-        <!-- Header do Modal -->
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-semibold text-gray-800">Como você está se sentindo?</h3>
-            <button onclick="closeSentimentModal()" class="text-gray-400 hover:text-gray-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
-        </div>
-
-        <!-- Conteúdo do Modal -->
-        <form id="sentimentForm" onsubmit="submitSentiment(event)">
-            <!-- Horário Atual -->
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Horário</label>
-                <input type="time" id="horarioAtual" class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-500">
-            </div>
-
-            <!-- Tipo de Sentimento -->
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Como você está se sentindo?</label>
-                <select id="tipoSentimento" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500" required>
-                    <option value="">Selecione um sentimento</option>
-                    <option value="feliz">😊 Feliz</option>
-                    <option value="triste">😢 Triste</option>
-                    <option value="ansioso">😰 Ansioso</option>
-                    <option value="calmo">😌 Calmo</option>
-                    <option value="raiva">😠 Com raiva</option>
-                    <option value="empolgado">🤩 Empolgado</option>
-                    <option value="frustrado">😤 Frustrado</option>
-                    <option value="amoroso">🥰 Amoroso</option>
-                    <option value="preocupado">😟 Preocupado</option>
-                    <option value="grato">🙏 Grato</option>
-                </select>
-            </div>
-
-            <!-- Nível de Intensidade -->
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Intensidade: <span id="nivelDisplay" class="font-bold text-orange-600">5</span>/10
-                </label>
-                <input type="range" id="nivelIntensidade" min="1" max="10" value="5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-orange">
-                <div class="flex justify-between text-xs text-gray-500 mt-1">
-                    <span>Fraco</span>
-                    <span>Intenso</span>
-                </div>
-            </div>
-
-            <!-- Descrição do Motivo -->
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-2">O que está causando esse sentimento?</label>
-                <textarea id="descricaoMotivo" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none" rows="3" placeholder="Descreva o que está acontecendo ou o que causou esse sentimento..." required></textarea>
-            </div>
-
-            <!-- Botões -->
-            <div class="flex space-x-3">
-                <button type="button" onclick="closeSentimentModal()" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200">
-                    Cancelar
-                </button>
-                <button type="submit" class="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors duration-200">
-                    Registrar Sentimento
                 </button>
             </div>
         </form>
