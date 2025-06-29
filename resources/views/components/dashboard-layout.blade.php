@@ -12,6 +12,25 @@
 
     <!-- Styles / Scripts -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .slider-orange::-webkit-slider-thumb {
+            appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #ea580c;
+            cursor: pointer;
+        }
+
+        .slider-orange::-moz-range-thumb {
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #ea580c;
+            cursor: pointer;
+            border: none;
+        }
+    </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
     <!-- Navbar para usuários logados -->
@@ -30,6 +49,9 @@
                     <div class="flex items-center space-x-6">
                     <a href="{{ route('dashboard') }}" class="text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-emerald-50">
                         Dashboard
+                    </a>
+                    <a href="{{ route('historico') }}" class="text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-emerald-50">
+                        Historico
                     </a>
                     <a href="{{ route('perfil') }}" class="text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-emerald-50">
                         Perfil

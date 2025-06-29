@@ -1,6 +1,84 @@
 <x-dashboard-layout title="Dashboard">
     <script>
         let currentCategory = '';
+        function openSentimentModal(){
+            const modalSentiment = document.getElementById('sentimentModal');
+            const sentimentContent = document.getElementById('sentimentModalContent');
+
+            const date = new Date();
+            const hora = date.getHours().toString().padStart(2, '0');
+            const minutos = date.getMinutes().toString().padStart(2, '0');
+
+            const horarioFormatado = hora + ":" + minutos;
+
+            document.getElementById('horarioAtual').value = horarioFormatado;
+
+            modalSentiment.classList.remove('hidden');
+            modalSentiment.classList.add('flex');
+
+            setTimeout(() => {
+                sentimentContent.classList.remove('scale-95', 'opacity-0');
+                sentimentContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+            document.getElementById('nivelIntensidade').addEventListener('input', function() {
+                document.getElementById('nivelDisplay').textContent = this.value;
+            });
+        }
+        function closeSentimentModal(){
+            const modalSentiment = document.getElementById('sentimentModal');
+            const sentimentContent = document.getElementById('sentimentModalContent');
+
+            modalSentiment.classList.add('hidden');
+            modalSentiment.classList.remove('flex');
+
+            setTimeout(() => {
+                sentimentContent.classList.add('scale-95', 'opacity-0');
+                sentimentContent.classList.remove('scale-100', 'opacity-100');
+            }, 10);
+        }
+        async function submitSentiment(event) {
+            event.preventDefault();
+
+            const tipoSentimento = document.getElementById('tipoSentimento').value;
+            const nivelIntensidade = document.getElementById('nivelIntensidade').value;
+            const horario = document.getElementById('horarioAtual').value;
+            const descricao = document.getElementById('descricaoMotivo').value.trim();
+
+            if (!tipoSentimento) {
+                showNotification('Por favor, selecione como você está se sentindo', 'warning');
+                return;
+            }
+            if (!descricao) {
+                showNotification('Por favor, adicione uma descrição para continuar', 'warning');
+                return;
+            }
+            try{
+                const response = await fetch('/api/sentimento',{
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        tipo_sentimento: tipoSentimento,
+                        nivel_intensidade: nivelIntensidade,
+                        descricao: descricao,
+                        horario: horario
+                    })
+                });
+                if(response.ok){
+                    showNotification('Sentimento registrado com sucesso!', 'success');
+                    closeSentimentModal();
+                    await atualizarEstatisticas();
+                } else {
+                    const error = await response.json();
+                    showNotification('Erro ao salvar: ' + (error.message || 'Algo deu errado'), 'error');
+                }
+            } catch(error){
+                console.error('Erro:', error);
+                showNotification('Erro de conexão. Verifique sua internet e tente novamente.', 'error');
+            }
+        }
 
         function openModal(category, title, color){
             currentCategory = category;
@@ -95,6 +173,7 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeModal();
+                closeSentimentModal();
             }
         });
         // Função para alternar a exibição da lista
@@ -264,7 +343,7 @@
                             <div class="ml-4">
                                 <h3 class="text-lg font-semibold text-gray-800">Reclamações</h3>
                                 <p class="text-sm text-gray-500">
-                                    <span data-stat="reclamacoes">{{ $estatisticas['reclamacoes'] }}</span> pontos de atenção
+                                    <span data-stat="reclamacoes">{{ $estatisticas['relacionamento']['reclamacoes'] }}</span> pontos de atenção
                                 </p>
                             </div>
                         </div>
@@ -294,7 +373,7 @@
                             <div class="ml-4">
                                 <h3 class="text-lg font-semibold text-gray-800">Pontos Positivos</h3>
                                 <p class="text-sm text-gray-500">
-                                    <span data-stat="positivos">{{ $estatisticas['positivos'] }}</span> pontos de atenção
+                                    <span data-stat="positivos">{{ $estatisticas['relacionamento']['positivos'] }}</span> pontos de atenção
                                 </p>
                             </div>
                         </div>
@@ -324,7 +403,7 @@
                             <div class="ml-4">
                                 <h3 class="text-lg font-semibold text-gray-800">Meus Desejos</h3>
                                 <p class="text-sm text-gray-500">
-                                    <span data-stat="meus_desejos">{{ $estatisticas['meus_desejos'] }}</span> pontos de atenção
+                                    <span data-stat="meus_desejos">{{ $estatisticas['relacionamento']['meus_desejos'] }}</span> pontos de atenção
                                 </p>
                             </div>
                         </div>
@@ -354,7 +433,7 @@
                             <div class="ml-4">
                                 <h3 class="text-lg font-semibold text-gray-800">Nossos Desejos</h3>
                                 <p class="text-sm text-gray-500">
-                                    <span data-stat="nossos_desejos">{{ $estatisticas['nossos_desejos'] }}</span> pontos de atenção
+                                    <span data-stat="nossos_desejos">{{ $estatisticas['relacionamento']['nossos_desejos'] }}</span> pontos de atenção
                                 </p>
                             </div>
                         </div>
@@ -384,7 +463,7 @@
                             <div class="ml-4">
                                 <h3 class="text-lg font-semibold text-gray-800">Melhorar em Mim</h3>
                                 <p class="text-sm text-gray-500">
-                                    <span data-stat="melhorar_mim">{{ $estatisticas['melhorar_mim'] }}</span> pontos de atenção
+                                    <span data-stat="melhorar_mim">{{ $estatisticas['relacionamento']['melhorar_mim'] }}</span> pontos de atenção
                                 </p>
                             </div>
                         </div>
@@ -414,7 +493,7 @@
                             <div class="ml-4">
                                 <h3 class="text-lg font-semibold text-gray-800">Melhorar Juntos</h3>
                                 <p class="text-sm text-gray-500">
-                                    <span data-stat="melhorar_juntos">{{ $estatisticas['melhorar_juntos'] }}</span> pontos de atenção
+                                    <span data-stat="melhorar_juntos">{{ $estatisticas['relacionamento']['melhorar_juntos'] }}</span> pontos de atenção
                                 </p>
                             </div>
                         </div>
@@ -430,7 +509,41 @@
                     </div>
                 </div>
             </div>
-
+            <!-- Card 7: Registro de Sentimentos -->
+            <div class="bg-white rounded-xl shadow-lg border border-orange-100 hover:shadow-xl transition-shadow duration-300">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center">
+                            <div class="p-3 bg-orange-100 rounded-lg">
+                                <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.01M15 10h1.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-lg font-semibold text-gray-800">Meus Sentimentos</h3>
+                                <p class="text-sm text-gray-500">
+                                    <span data-stat="sentimentos">{{ $estatisticas['sentimentos']['total'] }}</span> registros hoje
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-4">Registre como você se sente no momento e acompanhe seus padrões emocionais</p>
+                    <div class="mb-3">
+                        <div class="text-xs text-gray-500 mb-1">Último sentimento:</div>
+                        <div class="text-sm font-medium text-orange-700" id="ultimoSentimento">
+                            {{ $estatisticas['sentimentos']['ultimo'] ? ucfirst($estatisticas['sentimentos']['ultimo']->tipo_sentimento) . " • Intensidade " . $estatisticas['sentimentos']['ultimo']->nivel_intensidade . "/10" : 'Nenhum registro ainda' }}
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <a href="{{ route('historico') }}" class="flex-1 text-center bg-orange-50 text-orange-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-100 transition-colors duration-200">
+                            Ver Histórico
+                        </a>
+                        <button onclick="openSentimentModal()" class="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition-colors duration-200">
+                            Registrar Agora
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Seção de estatísticas rápidas -->
@@ -438,19 +551,19 @@
             <h2 class="text-2xl font-bold text-gray-800 mb-4">Resumo do Relacionamento</h2>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div class="text-center">
-                    <span class="text-3xl font-bold text-emerald-600" data-stat="total_itens">{{ $estatisticas['total_itens'] }}</span>
+                    <span class="text-3xl font-bold text-emerald-600" data-stat="total_itens">{{ $estatisticas['relacionamento']['total_itens'] }}</span>
                     <div class="text-sm text-gray-600">Total de itens</div>
                 </div>
                 <div class="text-center">
-                    <span class="text-3xl font-bold text-green-600" data-stat="positivos">{{ $estatisticas['positivos'] }}</span>
+                    <span class="text-3xl font-bold text-green-600" data-stat="positivos">{{ $estatisticas['relacionamento']['positivos'] }}</span>
                     <div class="text-sm text-gray-600">Pontos positivos</div>
                 </div>
                 <div class="text-center">
-                    <span class="text-3xl font-bold text-yellow-600" data-stat="total_melhorias">{{ $estatisticas['total_melhorias'] }}</span>
+                    <span class="text-3xl font-bold text-yellow-600" data-stat="total_melhorias">{{ $estatisticas['relacionamento']['total_melhorias'] }}</span>
                     <div class="text-sm text-gray-600">Para melhorar</div>
                 </div>
                 <div class="text-center">
-                    <span class="text-3xl font-bold text-purple-600" data-stat="total_desejos">{{ $estatisticas['total_desejos'] }}</span>
+                    <span class="text-3xl font-bold text-purple-600" data-stat="total_desejos">{{ $estatisticas['relacionamento']['total_desejos'] }}</span>
                     <div class="text-sm text-gray-600">Desejos totais</div>
                 </div>
             </div>
@@ -490,5 +603,73 @@
         </form>
     </div>
 </div>
+<!-- Modal para registrar sentimentos -->
+<div id="sentimentModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 items-center justify-center hidden">
+    <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" id="sentimentModalContent">
+        <!-- Header do Modal -->
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-gray-800">Como você está se sentindo?</h3>
+            <button onclick="closeSentimentModal()" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
 
+        <!-- Conteúdo do Modal -->
+        <form id="sentimentForm" onsubmit="submitSentiment(event)">
+            <!-- Horário Atual -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Horário</label>
+                <input type="time" id="horarioAtual" class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-500">
+            </div>
+
+            <!-- Tipo de Sentimento -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Como você está se sentindo?</label>
+                <select id="tipoSentimento" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500" required>
+                    <option value="">Selecione um sentimento</option>
+                    <option value="feliz">😊 Feliz</option>
+                    <option value="triste">😢 Triste</option>
+                    <option value="ansioso">😰 Ansioso</option>
+                    <option value="calmo">😌 Calmo</option>
+                    <option value="raiva">😠 Com raiva</option>
+                    <option value="empolgado">🤩 Empolgado</option>
+                    <option value="frustrado">😤 Frustrado</option>
+                    <option value="amoroso">🥰 Amoroso</option>
+                    <option value="preocupado">😟 Preocupado</option>
+                    <option value="grato">🙏 Grato</option>
+                </select>
+            </div>
+
+            <!-- Nível de Intensidade -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Intensidade: <span id="nivelDisplay" class="font-bold text-orange-600">5</span>/10
+                </label>
+                <input type="range" id="nivelIntensidade" min="1" max="10" value="5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-orange">
+                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>Fraco</span>
+                    <span>Intenso</span>
+                </div>
+            </div>
+
+            <!-- Descrição do Motivo -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">O que está causando esse sentimento?</label>
+                <textarea id="descricaoMotivo" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none" rows="3" placeholder="Descreva o que está acontecendo ou o que causou esse sentimento..." required></textarea>
+            </div>
+
+            <!-- Botões -->
+            <div class="flex space-x-3">
+                <button type="button" onclick="closeSentimentModal()" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                    Cancelar
+                </button>
+                <button type="submit" class="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors duration-200">
+                    Registrar Sentimento
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 

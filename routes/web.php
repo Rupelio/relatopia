@@ -1,11 +1,13 @@
 <?php
 
 use App\Http\Controllers\CadastroController;
+use App\Http\Controllers\HistoricoSentimentoController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InterfaceUsuarioController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PerfilUsuarioController;
 use App\Http\Controllers\RelacionamentoItemController;
+use App\Http\Controllers\SentimentoController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -17,6 +19,7 @@ Route::middleware('auth')->group(function () {
     // Dashboard
     Route::get('/dashboard', InterfaceUsuarioController::class)->name('dashboard');
     Route::get('/perfil', [PerfilUsuarioController::class, 'index'])->name('perfil');
+    Route::get('/historico', HistoricoSentimentoController::class)->name('historico');
 
     // Logout
     Route::post('/logout', function () {
@@ -33,5 +36,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/estatisticas', [RelacionamentoItemController::class, 'estatisticas']);
         Route::post('/alterar-senha', [PerfilUsuarioController::class, 'alterarSenha']);
         Route::post('/relacionamento', [PerfilUsuarioController::class, 'atualizarRelacionamento']);
+        Route::post('/sentimento', [SentimentoController::class, 'store']);
+        Route::get('/sentimento', [SentimentoController::class, 'index']);
+        Route::get('/estatisticasSentimento', [SentimentoController::class, 'estatisticasSentimento']);
     });
 });
