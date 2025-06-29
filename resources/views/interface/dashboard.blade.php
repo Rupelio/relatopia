@@ -77,9 +77,9 @@
                     })
                 });
                 if(response.ok){
+                    location.reload();
                     showNotification('Item adicionado com sucesso!', 'success');
                     closeModal();
-                    await atualizarEstatisticas();
                 } else {
                     const error = await response.json();
                     showNotification('Erro ao salvar: ' + (error.message || 'Algo deu errado'), 'error');
@@ -89,26 +89,7 @@
                 showNotification('Erro de conexão. Verifique sua internet e tente novamente.', 'error');
             }
         }
-        async function atualizarEstatisticas() {
-            try {
 
-                const response = await fetch('/api/estatisticas');
-                const estatisticas = await response.json();
-
-                document.querySelector('[data-stat="reclamacoes"]').textContent = estatisticas.reclamacoes;
-                document.querySelector('[data-stat="positivos"]').textContent = estatisticas.positivos;
-                document.querySelector('[data-stat="meus_desejos"]').textContent = estatisticas.meus_desejos;
-                document.querySelector('[data-stat="nossos_desejos"]').textContent = estatisticas.nossos_desejos;
-                document.querySelector('[data-stat="melhorar_mim"]').textContent = estatisticas.melhorar_mim;
-                document.querySelector('[data-stat="melhorar_juntos"]').textContent = estatisticas.melhorar_juntos;
-                document.querySelector('[data-stat="total_itens"]').textContent = estatisticas.total_itens;
-                document.querySelector('[data-stat="total_melhorias"]').textContent = estatisticas.total_melhorias;
-                document.querySelector('[data-stat="total_desejos"]').textContent = estatisticas.total_desejos;
-
-            } catch (error) {
-
-            }
-        }
         document.getElementById('addModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeModal();
@@ -167,7 +148,7 @@
                                         <span>${item.descricao}</span>
                                     </div>
                                     <div class="flex items-center space-x-2">
-                                        <button onclick="toggleItem(${item.id})" class="${toggleButtonColor} text-xs" title="${toggleTitle}">
+                                        <button onclick="toggleItem(${item.id}, this)" class="${toggleButtonColor} text-xs" title="${toggleTitle}">
                                             ${toggleIcon}
                                         </button>
                                         <button onclick="removeItem(${item.id})" class="text-red-500 hover:text-red-700 text-xs" title="Remover item">
@@ -211,7 +192,7 @@
             }
         }
 
-        async function toggleItem(itemId) {
+        async function toggleItem(itemId, btn) {
             try {
                 const response = await fetch(`/api/relacionamento-itens/${itemId}/toggle`, {
                     method: 'PUT',
@@ -221,13 +202,14 @@
                     }
                 });
                 if(response.ok){
-                    const openList = document.querySelector('.card-list');
+                    const card = btn.closest('.bg-white');
+                    const openList = card.querySelector('.card-list');
                     if(openList){
-                        const button = openList.closest('.bg-white').querySelector('button[onclick*="toggleCardList"]');
+                        const button = card.closest('.bg-white').querySelector('button[onclick*="toggleCardList"]');
                         button.click();
                         setTimeout(() => button.click(), 100);
                     }
-                    await atualizarEstatisticas();
+                    location.reload();
                     showNotification('Status alterado com sucesso!', 'success');
                 }
             } catch (error) {
