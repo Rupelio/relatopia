@@ -305,7 +305,11 @@
                 if (response.ok) {
                     showNotification(sentimentoId ? 'Sentimento atualizado com sucesso!' : 'Sentimento registrado com sucesso!', 'success');
                     closeSentimentModal();
-                    location.reload();
+                    if (typeof atualizarSentimentoCard === 'function') {
+                        atualizarSentimentoCard();
+                    } else {
+                        location.reload();
+                    }
                 } else {
                     const error = await response.json();
                     showNotification('Erro ao salvar: ' + (error.message || 'Algo deu errado'), 'error');

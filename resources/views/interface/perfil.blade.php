@@ -152,7 +152,17 @@
             </div>
         </div>
     </div>
-
+    <!-- Modal de confirmação -->
+    <div id="confirmModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden">
+        <div class="bg-white rounded-xl shadow-lg p-8 max-w-sm w-full text-center">
+            <h3 class="text-lg font-semibold mb-4">Tem certeza?</h3>
+            <p class="mb-6 text-gray-600">Esta ação não pode ser desfeita. Todos os seus dados serão perdidos.</p>
+            <div class="flex justify-center gap-4">
+                <button id="cancelBtn" class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">Cancelar</button>
+                <button id="confirmBtn" class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700">Excluir</button>
+            </div>
+        </div>
+    </div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('changePasswordForm');
@@ -307,13 +317,33 @@
                 showNotification('Erro ao salvar informações', 'error')
             }
         });
-        function confirmDelete() {
-            if (confirm('Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita e todos os seus dados serão perdidos.')) {
-                if (confirm('Última confirmação: Realmente deseja excluir sua conta permanentemente?')) {
-                    // Aqui faria a requisição para excluir a conta
-                    showNotification('Ainda está sendo desenvolvida', 'warning');
-                }
+        function showConfirmModal(onConfirm) {
+            const modal = document.getElementById('confirmModal');
+            modal.classList.remove('hidden');
+            function cleanup() {
+                modal.classList.add('hidden');
+                confirmBtn.removeEventListener('click', onConfirmClick);
+                cancelBtn.removeEventListener('click', onCancelClick);
             }
+            function onConfirmClick() {
+                cleanup();
+                onConfirm();
+            }
+            function onCancelClick() {
+                cleanup();
+            }
+            const confirmBtn = document.getElementById('confirmBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+            confirmBtn.addEventListener('click', onConfirmClick);
+            cancelBtn.addEventListener('click', onCancelClick);
+        }
+
+        // Use assim:
+        function confirmDelete() {
+            showConfirmModal(() => {
+                showNotification('Ainda está sendo desenvolvida', 'warning');
+                // Aqui você faria a requisição para excluir a conta
+            });
         }
     </script>
 </x-dashboard-layout>

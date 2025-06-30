@@ -77,9 +77,13 @@
                     })
                 });
                 if(response.ok){
-                    location.reload();
                     showNotification('Item adicionado com sucesso!', 'success');
                     closeModal();
+                    // Atualiza só a lista do card e as estatísticas
+                    setTimeout(() => {
+                        atualizarCardList(currentCategory);
+                        atualizarEstatisticas();
+                    }, 500);
                 } else {
                     const error = await response.json();
                     showNotification('Erro ao salvar: ' + (error.message || 'Algo deu errado'), 'error');
@@ -89,7 +93,6 @@
                 showNotification('Erro de conexão. Verifique sua internet e tente novamente.', 'error');
             }
         }
-
         document.getElementById('addModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeModal();
@@ -209,8 +212,11 @@
                         button.click();
                         setTimeout(() => button.click(), 100);
                     }
-                    location.reload();
                     showNotification('Status alterado com sucesso!', 'success');
+                    setTimeout(() => {
+                        atualizarCardList(currentCategory);
+                        atualizarEstatisticas();
+                    }, 500);
                 }
             } catch (error) {
                 console.error('Erro ao alterar status:', error);
@@ -238,13 +244,67 @@
                         }
 
                         // Atualizar estatísticas
-                        await atualizarEstatisticas();
                         showNotification('Item removido com sucesso!', 'success');
+                        setTimeout(() => {
+                            atualizarCardList(currentCategory);
+                            atualizarEstatisticas();
+                        }, 500);
                     }
                 } catch (error) {
                     console.error('Erro ao remover item:', error);
                     showNotification('Erro ao remover item. Tente novamente.', 'error');
                 }
+            }
+        }
+        async function atualizarCardList(category) {
+            // Procura o card correto pelo atributo data-category
+            const cardButton = document.querySelector(`button[onclick="toggleCardList('${category}')"]`);
+            if (cardButton) {
+                // Se a lista estiver aberta, fecha e reabre para atualizar
+                if (cardButton.textContent.trim() === 'Ocultar Lista') {
+                    cardButton.click();
+                    setTimeout(() => cardButton.click(), 200);
+                }
+            }
+        }
+        async function atualizarSentimentoCard() {
+            try {
+                const response = await fetch('/api/estatisticasSentimento');
+                if (response.ok) {
+                    const ultimo = await response.json();
+                    // Atualize o texto do card de sentimentos
+                    document.querySelector('[data-stat="sentimentos"]').textContent = ultimo.total;
+                    document.querySelector('[data-stat="ultimo_sentimento"]').textContent =
+                        ultimo.ultimo
+                            ? capitalize(ultimo.ultimo.tipo_sentimento) + " • Intensidade " + ultimo.ultimo.nivel_intensidade + "/10"
+                            : 'Nenhum registro ainda';
+                }
+            } catch (error) {
+                // Silencie ou mostre erro se quiser
+            }
+        }
+        function capitalize(str) {
+            return str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
+        }
+        async function atualizarEstatisticas() {
+            try {
+                const response = await fetch('/api/estatisticas');
+                if (response.ok) {
+                    const stats = await response.json();
+                    // Atualize os elementos na tela conforme os dados retornados
+                    document.querySelector('[data-stat="reclamacoes"]').textContent = stats.reclamacoes;
+                    document.querySelector('[data-stat="positivos"]').textContent = stats.positivos;
+                    document.querySelector('[data-stat="meus_desejos"]').textContent = stats.meus_desejos;
+                    document.querySelector('[data-stat="nossos_desejos"]').textContent = stats.nossos_desejos;
+                    document.querySelector('[data-stat="melhorar_mim"]').textContent = stats.melhorar_mim;
+                    document.querySelector('[data-stat="melhorar_juntos"]').textContent = stats.melhorar_juntos;
+                    document.querySelector('[data-stat="total_itens"]').textContent = stats.total_itens;
+                    document.querySelector('[data-stat="total_melhorias"]').textContent = stats.total_melhorias;
+                    document.querySelector('[data-stat="total_desejos"]').textContent = stats.total_desejos;
+                    // ...adicione outros campos conforme necessário
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar estatísticas:', error);
             }
         }
     </script>
