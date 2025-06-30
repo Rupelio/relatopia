@@ -78,19 +78,28 @@
                 <!-- Estatísticas -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                     <div class="bg-white rounded-xl p-4 shadow-sm border border-orange-100">
-                        <div class="text-2xl font-bold text-orange-600">{{ $estatisticas['total'] }}</div>
+                        <div class="text-2xl font-bold text-orange-600">{{ $estatisticas['total'] ? $estatisticas['total'] : '-' }}</div>
                         <div class="text-sm text-gray-600">Total de registros</div>
                     </div>
                     <div class="bg-white rounded-xl p-4 shadow-sm border border-orange-100">
-                        <div class="text-2xl font-bold text-{{ $cores[$estatisticas['mais_comum']->tipo_sentimento] }}-600">{{ ucfirst($estatisticas['mais_comum']->tipo_sentimento) }}</div>
-                        <div class="text-sm text-gray-600">Sentimento mais comum</div>
+                        <div class="bg-white rounded-xl p-4 shadow-sm border border-orange-100">
+                            @if(isset($estatisticas['mais_comum']) && $estatisticas['mais_comum'])
+                                <div class="text-2xl font-bold text-{{ $cores[$estatisticas['mais_comum']->tipo_sentimento] ?? 'gray' }}-600">
+                                    {{ ucfirst($estatisticas['mais_comum']->tipo_sentimento) }}
+                                </div>
+                                <div class="text-sm text-gray-600">Sentimento mais comum</div>
+                            @else
+                                <div class="text-2xl font-bold text-gray-400">-</div>
+                                <div class="text-sm text-gray-600">Sentimento mais comum</div>
+                            @endif
+                        </div>
                     </div>
                     <div class="bg-white rounded-xl p-4 shadow-sm border border-orange-100">
-                        <div class="text-2xl font-bold text-orange-600">{{ number_format($estatisticas['media_intensidade'], 1) }}</div>
+                        <div class="text-2xl font-bold text-orange-600">{{ isset($estatisticas['media_intensidade']) ? number_format($estatisticas['media_intensidade'], 1) : '-' }}</div>
                         <div class="text-sm text-gray-600">Intensidade média</div>
                     </div>
                     <div class="bg-white rounded-xl p-4 shadow-sm border border-orange-100">
-                        <div class="text-2xl font-bold text-orange-600">{{ $estatisticas['esta_semana'] }}</div>
+                        <div class="text-2xl font-bold text-orange-600">{{ isset($estatisticas['esta_semana']) ? $estatisticas['esta_semana'] : '-' }}</div>
                         <div class="text-sm text-gray-600">Esta semana</div>
                     </div>
                 </div>
