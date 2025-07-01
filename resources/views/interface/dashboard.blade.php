@@ -322,7 +322,7 @@
         </div>
 
         <!-- Grid de cards do dashboard -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
 
             <!-- Card 1: Reclamações -->
             <div class="bg-white rounded-xl shadow-lg border border-red-100 hover:shadow-xl transition-shadow duration-300">
@@ -515,6 +515,38 @@
                     </div>
                 </div>
             </div>
+            <!-- Card 8: Em breve -->
+            <div class="bg-white rounded-xl shadow-lg border border-pink-100 hover:shadow-xl transition-shadow duration-300">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center">
+                            <div class="p-3 bg-pink-100 rounded-lg">
+                                <svg class="w-6 h-6 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="9" stroke-width="2" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7v5l3 3" />
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-lg font-semibold text-gray-800">Lista de desejos (em breve)</h3>
+                                <p class="text-sm text-gray-500">
+                                    <span data-stat="reclamacoes">0</span> objetos cadastrados
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-4">Em breve você poderá criar uma lista com os objetos e experiências que deseja realizar ou conquistar. Fique de olho nas novidades! </p>
+                    <div class="flex space-x-2">
+                        <button onclick="" class="flex-1 bg-red-50 text-pink-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-pink-100 transition-colors duration-200">
+                            Ver Lista
+                        </button>
+                        @if(empty($somenteLeitura))
+                        <button onclick="" class="px-4 py-2 bg-pink-600 text-white rounded-lg text-sm font-medium hover:bg-pink-700 transition-colors duration-200">
+                            + Adicionar
+                        </button>
+                        @endif
+                    </div>
+                </div>
+            </div>
             <!-- Card 7: Registro de Sentimentos -->
             <div class="bg-white rounded-xl shadow-lg border border-orange-100 hover:shadow-xl transition-shadow duration-300">
                 <div class="p-6">
@@ -552,6 +584,7 @@
                     </div>
                 </div>
             </div>
+
         </div>
 
         <!-- Seção de estatísticas rápidas -->
