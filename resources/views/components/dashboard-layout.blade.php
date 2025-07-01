@@ -53,6 +53,28 @@
                     <a href="{{ route('historico') }}" class="text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-emerald-50">
                         Historico
                     </a>
+                    @php
+                        $user = auth()->user();
+                        $relacionamento = \App\Models\Relacionamento::where(function($q) use ($user) {
+                            $q->where('user_id_1', $user->id)
+                            ->orWhere('user_id_2', $user->id);
+                        })->where('status', 'ativo')->first();
+                    @endphp
+
+                    @if($relacionamento)
+                        <div class="relative group">
+                            <button id="parceiroDropdownBtn" class="flex items-center text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-emerald-50 focus:outline-none">
+                                Parceiro
+                                <svg class="ml-1 w-4 h-4 text-gray-500 group-hover:text-emerald-600 transition-colors duration-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+                            <div id="parceiroDropdown" class="hidden group-hover:block absolute right-0 w-52 bg-white border rounded shadow-lg z-50">
+                                <a href="{{ route('dashboard-parceiro', $relacionamento->id) }}" class="block px-4 py-2 text-gray-700 text-sm font-medium hover:bg-emerald-50">Dashboard do parceiro</a>
+                                <a href="{{ route('historico-parceiro', $relacionamento->id) }}" class="block px-4 py-2 text-gray-700 text-sm font-medium hover:bg-emerald-50">Histórico do parceiro</a>
+                            </div>
+                        </div>
+                    @endif
                     <a href="{{ route('perfil') }}" class="text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-emerald-50">
                         Perfil
                     </a>

@@ -1,6 +1,7 @@
 <x-dashboard-layout title="Dashboard">
     <script>
         let currentCategory = '';
+        const somenteLeitura = @json(!empty($somenteLeitura));
         function openSentimentModal(){
             const modalSentiment = document.getElementById('sentimentModal');
             const sentimentContent = document.getElementById('sentimentModalContent');
@@ -57,7 +58,10 @@
         }
         async function submitForm(event) {
             event.preventDefault();
-
+            if (somenteLeitura) {
+                showNotification('Você não pode alterar os dados do parceiro.', 'warning');
+                return;
+            }
             const description = document.getElementById('itemDescription').value.trim();
 
             if (!description) {
@@ -151,14 +155,16 @@
                                         <span>${item.descricao}</span>
                                     </div>
                                     <div class="flex items-center space-x-2">
-                                        <button onclick="toggleItem(${item.id}, this)" class="${toggleButtonColor} text-xs" title="${toggleTitle}">
-                                            ${toggleIcon}
-                                        </button>
-                                        <button onclick="removeItem(${item.id})" class="text-red-500 hover:text-red-700 text-xs" title="Remover item">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                            </svg>
-                                        </button>
+                                        ${!somenteLeitura ? `
+                                            <button onclick="toggleItem(${item.id}, this)" class="${toggleButtonColor} text-xs" title="${toggleTitle}">
+                                                ${toggleIcon}
+                                            </button>
+                                            <button onclick="removeItem(${item.id})" class="text-red-500 hover:text-red-700 text-xs" title="Remover item">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                </svg>
+                                            </button>
+                                        ` : ''}
                                     </div>
                                 </li>
                             `;
@@ -341,9 +347,11 @@
                         <button onclick="toggleCardList('reclamacoes')" class="flex-1 bg-red-50 text-red-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors duration-200">
                             Ver Lista
                         </button>
+                        @if(empty($somenteLeitura))
                         <button onclick="openModal('reclamacoes', 'Reclamações', 'red')" class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors duration-200">
                             + Adicionar
                         </button>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -371,9 +379,11 @@
                         <button onclick="toggleCardList('positivos')" class="flex-1 bg-green-50 text-green-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-100 transition-colors duration-200">
                             Ver Lista
                         </button>
+                        @if(empty($somenteLeitura))
                         <button onclick="openModal('positivos', 'Ponto Positivo', 'green')" class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors duration-200">
                             + Adicionar
                         </button>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -401,9 +411,11 @@
                         <button onclick="toggleCardList('meus_desejos')" class="flex-1 bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors duration-200">
                             Ver Lista
                         </button>
+                        @if(empty($somenteLeitura))
                         <button onclick="openModal('meus_desejos', 'Meus Desejos', 'blue')" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors duration-200">
                             + Adicionar
                         </button>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -431,9 +443,11 @@
                         <button onclick="toggleCardList('nossos_desejos')" class="flex-1 bg-purple-50 text-purple-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-100 transition-colors duration-200">
                             Ver Lista
                         </button>
+                        @if(empty($somenteLeitura))
                         <button onclick="openModal('nossos_desejos', 'Nossos Desejos', 'purple')" class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors duration-200">
                             + Adicionar
                         </button>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -461,9 +475,11 @@
                         <button onclick="toggleCardList('melhorar_mim')" class="flex-1 bg-yellow-50 text-yellow-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-yellow-100 transition-colors duration-200">
                             Ver Lista
                         </button>
+                        @if(empty($somenteLeitura))
                         <button onclick="openModal('melhorar_mim', 'Melhorar em Mim', 'green')" class="px-4 py-2 bg-yellow-600 text-white rounded-lg text-sm font-medium hover:bg-yellow-700 transition-colors duration-200">
                             + Adicionar
                         </button>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -491,9 +507,11 @@
                         <button onclick="toggleCardList('melhorar_juntos')" class="flex-1 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-100 transition-colors duration-200">
                             Ver Lista
                         </button>
+                        @if(empty($somenteLeitura))
                         <button onclick="openModal('melhorar_juntos', 'Melhorar Juntos', 'green')" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors duration-200">
                             + Adicionar
                         </button>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -526,9 +544,11 @@
                         <a href="{{ route('historico') }}" class="flex-1 text-center bg-orange-50 text-orange-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-100 transition-colors duration-200">
                             Ver Histórico
                         </a>
+                        @if(empty($somenteLeitura))
                         <button onclick="openSentimentModal()" class="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition-colors duration-200">
                             Registrar Agora
                         </button>
+                        @endif
                     </div>
                 </div>
             </div>

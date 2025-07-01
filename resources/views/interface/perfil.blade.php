@@ -8,7 +8,18 @@
                     <h1 class="text-2xl font-bold text-white">Meu Perfil</h1>
                     <p class="text-emerald-100 mt-1">Gerencie suas informações e configurações</p>
                 </div>
-
+                @if(isset($relacionamento))
+                    <div class="bg-emerald-50 rounded-lg p-4 mb-4">
+                        <span class="font-semibold text-emerald-700">Vinculado com:</span>
+                        {{ $relacionamento->user_id_1 == auth()->id() ? $relacionamento->usuario2->name : $relacionamento->usuario1->name }}
+                        ({{ $relacionamento->user_id_1 == auth()->id() ? $relacionamento->usuario2->email : $relacionamento->usuario1->email }})
+                        <form method="POST" action="{{ route('desfazer-vinculo', $relacionamento->id) }}" class="inline">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="ml-2 text-red-600 hover:underline">Desfazer vínculo</button>
+                        </form>
+                    </div>
+                @endif
                 <div class="p-8 space-y-8">
                     <!-- Seção: Segurança da Conta -->
                     <div>
@@ -136,7 +147,21 @@
                             </div>
                             <h2 class="text-lg font-semibold text-gray-800">Preferências</h2>
                         </div>
-
+                        <!-- Seção: Vincular co-participante -->
+                        <div class="bg-gray-50 rounded-lg p-6 space-y-4 mt-8">
+                            <form id="vincularParticipanteForm" class="space-y-4">
+                                @csrf
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">E-mail do co-participante</label>
+                                    <input type="email" name="email_coparticipante" id="email_coparticipante"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+                                        placeholder="Digite o e-mail da pessoa para vincular" required>
+                                </div>
+                                <button type="submit" class="bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700 transition-colors duration-200 font-medium">
+                                    Enviar convite
+                                </button>
+                            </form>
+                        </div>
                         <div class="bg-gray-50 rounded-lg p-6">
                             <!-- Zona de perigo -->
                             <div class="border-2 border-red-200 rounded-lg p-4 bg-red-50">
@@ -337,7 +362,28 @@
             confirmBtn.addEventListener('click', onConfirmClick);
             cancelBtn.addEventListener('click', onCancelClick);
         }
-
+        document.getElementById('vincularParticipanteForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email_coparticipante').value;
+            try {
+                const response = await fetch('/api/vincular-coparticipante', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({ email })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showNotification(data.message || 'Convite enviado com sucesso!', 'success');
+                } else {
+                    showNotification(data.message || 'Erro ao enviar convite', 'error');
+                }
+            } catch (error) {
+                showNotification('Erro ao enviar convite', 'error');
+            }
+        });
         // Use assim:
         function confirmDelete() {
             showConfirmModal(() => {
