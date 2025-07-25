@@ -12,6 +12,8 @@
 
     <!-- Styles / Scripts -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3613355728057212"
+     crossorigin="anonymous"></script>
     <style>
         .slider-orange::-webkit-slider-thumb {
             appearance: none;
