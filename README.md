@@ -12,6 +12,7 @@
 [![MySQL](https://img.shields.io/badge/MySQL-8.0+-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://mysql.com)
 
 [🌟 Demo](#demo) • [🚀 Funcionalidades](#funcionalidades) • [💻 Instalação](#instalação) • [📱 Screenshots](#screenshots) • [🤝 Contribuindo](#contribuindo)
+<p>🌐 Acesse o site em: <a href="https://relatopia.laravel.cloud">Relatopia</a></p>
 
 </div>
 
@@ -342,7 +343,8 @@ Encontrou algum problema ou tem alguma sugestão?
 
 - 🐛 [Reporte um bug](https://github.com/Rupelio/relatopia/issues)
 - 💡 [Sugira uma funcionalidade](https://github.com/Rupelio/relatopia/issues)
-- 📧 Entre em contato: [seu-email@exemplo.com](mailto:seu-email@exemplo.com)
+- 📧 Entre em contato: [rupeliojunior445@gmail.com](mailto:rupeliojunior445@gmail.com)
+- 🌐 Acesse o site em: [Relatopia](hhtps://relatopia.laravel.cloud)
 
 ---
 
