@@ -6,6 +6,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InterfaceUsuarioController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PerfilUsuarioController;
+use App\Http\Controllers\RedefinirSenhaController;
 use App\Http\Controllers\RelacionamentoController;
 use App\Http\Controllers\RelacionamentoItemController;
 use App\Http\Controllers\SentimentoController;
@@ -15,6 +16,12 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', HomeController::class);
 Route::match(['GET', 'POST'], '/login', LoginController::class)->name('login');
 Route::match(['GET', 'POST'], '/cadastro', CadastroController::class)->name('cadastro');
+
+// Rotas para redefinição de senha (sem autenticação)
+Route::get('/esqueci-senha', [RedefinirSenhaController::class, 'mostrarFormularioSolicitacao'])->name('password.request');
+Route::post('/esqueci-senha', [RedefinirSenhaController::class, 'enviarLinkRedefinicao'])->name('password.email');
+Route::get('/redefinir-senha/{token}', [RedefinirSenhaController::class, 'mostrarFormularioRedefinicao'])->name('password.reset');
+Route::post('/redefinir-senha', [RedefinirSenhaController::class, 'redefinirSenha'])->name('password.update');
 
 Route::middleware('auth')->group(function () {
     // Dashboard
