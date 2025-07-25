@@ -438,10 +438,10 @@
                 if (response.ok) {
                     showNotification(data.message || 'Convite enviado com sucesso!', 'success');
                 } else {
-                    showNotification(data.message || 'Erro ao enviar convite', 'error');
+                    showNotification(data.message || 'Erro ao enviar convite!', 'error');
                 }
             } catch (error) {
-                showNotification('Erro ao enviar convite', 'error');
+                showNotification('Erro ao enviar convite! O usuário precisa estar cadastrado!', 'error');
             }
         });
         // Use assim:
