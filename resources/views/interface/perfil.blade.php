@@ -1,53 +1,85 @@
 <x-dashboard-layout title="Perfil">
     <div class="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4">
-        <div class="max-w-2xl w-full">
+        <div class="max-w-2xl w-full animate-bounce-in">
             <!-- Card principal -->
-            <div class="bg-white rounded-2xl shadow-xl border border-emerald-200 overflow-hidden">
+            <div class="bg-white rounded-2xl shadow-2xl border-2 border-emerald-200 overflow-hidden card-hover">
                 <!-- Header -->
-                <div class="bg-gradient-to-r from-emerald-500 to-teal-600 px-8 py-6">
-                    <h1 class="text-2xl font-bold text-white">Meu Perfil</h1>
-                    <p class="text-emerald-100 mt-1">Gerencie suas informações e configurações</p>
-                </div>
-
-                <!-- Status do Relacionamento -->
-                @if(isset($relacionamento))
-                    <!-- Relacionamento Ativo -->
-                    <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-4">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <span class="inline-flex items-center px-2 py-1 bg-emerald-100 text-emerald-800 text-xs font-medium rounded-full mb-2">
-                                    ✅ Relacionamento Ativo
-                                </span>
-                                <p class="text-emerald-700">
-                                    <span class="font-semibold">Vinculado com:</span>
-                                    {{ $relacionamento->user_id_1 == auth()->id() ? $relacionamento->usuario2->name : $relacionamento->usuario1->name }}
-                                    <span class="text-emerald-600">({{ $relacionamento->user_id_1 == auth()->id() ? $relacionamento->usuario2->email : $relacionamento->usuario1->email }})</span>
-                                </p>
+                <div class="bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 px-8 py-8 relative overflow-hidden">
+                    <!-- Efeito de ondas no background -->
+                    <div class="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent animate-pulse-gentle"></div>
+                    <div class="relative">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-16 h-16 bg-white/20 backdrop-blur rounded-full flex items-center justify-center">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
                             </div>
-                            <form method="POST" action="{{ route('desfazer-vinculo', $relacionamento->id) }}" class="inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-sm font-medium rounded-lg transition-colors duration-200" onclick="return confirm('Tem certeza que deseja desfazer este vínculo?')">
-                                    Desfazer vínculo
-                                </button>
-                            </form>
+                            <div>
+                                <h1 class="text-3xl font-bold text-white">Meu Perfil</h1>
+                                <p class="text-emerald-100 mt-1 text-lg">Gerencie suas informações e configurações</p>
+                            </div>
                         </div>
                     </div>
-                @elseif(isset($conviteEnviado))
-                    <!-- Convite Enviado Pendente -->
-                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <span class="inline-flex items-center px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full mb-2">
-                                    ⏳ Convite Pendente
-                                </span>
-                                <p class="text-yellow-700">
-                                    <span class="font-semibold">Convite enviado para:</span>
-                                    {{ $conviteEnviado->usuario2->name }}
-                                    <span class="text-yellow-600">({{ $conviteEnviado->usuario2->email }})</span>
-                                </p>
-                                <p class="text-yellow-600 text-sm mt-1">Aguardando resposta do destinatário</p>
+                </div>
+
+                <div class="p-8 space-y-6">
+                    <!-- Status do Relacionamento -->
+                    @if(isset($relacionamento))
+                        <!-- Relacionamento Ativo -->
+                        <div class="bg-gradient-to-r from-emerald-50 to-emerald-100 border-2 border-emerald-200 rounded-2xl p-6 transform transition-all duration-300 hover:scale-105">
+                            <div class="flex items-center justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-2 mb-3">
+                                        <span class="inline-flex items-center px-3 py-2 bg-emerald-100 text-emerald-800 text-sm font-bold rounded-full border-2 border-emerald-200 animate-pulse-gentle">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                            </svg>
+                                            Relacionamento Ativo
+                                        </span>
+                                    </div>
+                                    <p class="text-emerald-800 text-lg">
+                                        <span class="font-bold">Vinculado com:</span>
+                                        <span class="text-emerald-700 font-semibold">{{ $relacionamento->user_id_1 == auth()->id() ? $relacionamento->usuario2->name : $relacionamento->usuario1->name }}</span>
+                                    </p>
+                                    <p class="text-emerald-600 text-sm mt-1">({{ $relacionamento->user_id_1 == auth()->id() ? $relacionamento->usuario2->email : $relacionamento->usuario1->email }})</p>
+                                </div>
+                                <form method="POST" action="{{ route('desfazer-vinculo', $relacionamento->id) }}" class="inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 text-sm font-bold rounded-xl transition-all duration-200 transform hover:scale-105 border-2 border-red-200 hover:border-red-300" onclick="return confirm('Tem certeza que deseja desfazer este vínculo?')">
+                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                        Desfazer vínculo
+                                    </button>
+                                </form>
                             </div>
+                        </div>
+                    @elseif(isset($conviteEnviado))
+                        <!-- Convite Enviado Pendente -->
+                        <div class="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-200 rounded-2xl p-6 transform transition-all duration-300 hover:scale-105">
+                            <div class="flex items-center justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-2 mb-3">
+                                        <span class="inline-flex items-center px-3 py-2 bg-yellow-100 text-yellow-800 text-sm font-bold rounded-full border-2 border-yellow-200 animate-pulse-gentle">
+                                            <svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            Convite Pendente
+                                        </span>
+                                    </div>
+                                    <p class="text-yellow-800 text-lg">
+                                        <span class="font-bold">Convite enviado para:</span>
+                                        <span class="text-yellow-700 font-semibold">{{ $conviteEnviado->usuario2->name }}</span>
+                                    </p>
+                                    <p class="text-yellow-600 text-sm mt-1">({{ $conviteEnviado->usuario2->email }})</p>
+                                    <p class="text-yellow-600 text-sm mt-2 flex items-center">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        Aguardando resposta do destinatário
+                                    </p>
+                                </div>
                             <button onclick="cancelarConvite({{ $conviteEnviado->id }})" class="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-sm font-medium rounded-lg transition-colors duration-200">
                                 Cancelar convite
                             </button>

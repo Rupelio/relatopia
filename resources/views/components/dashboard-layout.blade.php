@@ -33,6 +33,75 @@
             cursor: pointer;
             border: none;
         }
+
+        /* Animações personalizadas */
+        @keyframes progress {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+
+        @keyframes pulse-gentle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-2px); }
+            75% { transform: translateX(2px); }
+        }
+
+        @keyframes bounce-in {
+            0% { transform: scale(0.3) translateY(-50px); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .animate-progress {
+            animation: progress linear;
+        }
+
+        .animate-pulse-gentle {
+            animation: pulse-gentle 2s infinite;
+        }
+
+        .animate-shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .animate-bounce-in {
+            animation: bounce-in 0.6s ease-out;
+        }
+
+        /* Loading skeleton */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Micro interações */
+        .btn-primary {
+            @apply bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:bg-emerald-700 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2;
+        }
+
+        .btn-secondary {
+            @apply bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:bg-gray-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
+        }
+
+        .card-hover {
+            @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+        }
+
+        .input-focus {
+            @apply transition-all duration-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:scale-[1.02];
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -155,6 +224,16 @@
     <main class="pt-16">
         {{ $slot }}
     </main>
+
+    <!-- Loading Overlay Global -->
+    <div id="globalLoading" class="fixed inset-0 bg-black bg-opacity-30 z-50 items-center justify-center hidden">
+        <div class="bg-white rounded-xl p-6 shadow-lg flex items-center space-x-3">
+            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600"></div>
+            <span class="text-gray-700 font-medium">Carregando...</span>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
     <div id="notifications" class="fixed top-4 right-4 z-50 space-y-2"></div>
     <footer class="bg-gradient-to-r from-emerald-50 to-teal-50 border-t border-emerald-100 py-3">
         <div class="max-w-7xl mx-auto px-4">
@@ -179,32 +258,50 @@
         </div>
     </footer>
     <!-- Modal para registrar sentimentos -->
-    <div id="sentimentModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 items-center justify-center hidden">
-        <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" id="sentimentModalContent">
+    <div id="sentimentModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 items-center justify-center hidden backdrop-blur-sm">
+        <div class="bg-white rounded-2xl p-6 max-w-md w-full mx-4 transform transition-all duration-500 scale-95 opacity-0 shadow-2xl border border-emerald-100" id="sentimentModalContent">
             <!-- Header do Modal -->
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold text-gray-800">Como você está se sentindo?</h3>
-                <button onclick="closeSentimentModal()" class="text-gray-400 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.01M15 10h1.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800">Como você está se sentindo?</h3>
+                </div>
+                <button onclick="closeSentimentModal()" class="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-2 hover:bg-gray-100 rounded-full">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
                 </button>
             </div>
 
             <!-- Conteúdo do Modal -->
-            <form id="sentimentForm" onsubmit="submitSentiment(event)">
+            <form id="sentimentForm" onsubmit="submitSentiment(event)" class="space-y-6">
                 <input type="hidden" id="sentimentoId">
+
                 <!-- Horário Atual -->
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Horário</label>
-                    <input type="time" id="horarioAtual" class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-500">
+                <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-gray-700 flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Horário
+                    </label>
+                    <input type="time" id="horarioAtual" class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-700 transition-all duration-200 focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-200 input-focus">
                 </div>
 
                 <!-- Tipo de Sentimento -->
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Como você está se sentindo?</label>
-                    <select id="tipoSentimento" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500" required>
-                        <option value="">Selecione um sentimento</option>
+                <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-gray-700 flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.01M15 10h1.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Como você está se sentindo?
+                    </label>
+                    <select id="tipoSentimento" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all duration-200 input-focus" required>
+                        <option value="" disabled selected>Selecione um sentimento</option>
                         <option value="feliz">😊 Feliz</option>
                         <option value="triste">😢 Triste</option>
                         <option value="ansioso">😰 Ansioso</option>
@@ -219,30 +316,60 @@
                 </div>
 
                 <!-- Nível de Intensidade -->
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Intensidade: <span id="nivelDisplay" class="font-bold text-orange-600">5</span>/10
+                <div class="space-y-3">
+                    <label class="block text-sm font-semibold text-gray-700 flex items-center justify-between">
+                        <span class="flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                            Intensidade
+                        </span>
+                        <span class="text-lg font-bold text-orange-600 bg-orange-100 px-3 py-1 rounded-full" id="nivelDisplay">5</span>
                     </label>
-                    <input type="range" id="nivelIntensidade" min="1" max="10" value="5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-orange">
-                    <div class="flex justify-between text-xs text-gray-500 mt-1">
-                        <span>Fraco</span>
-                        <span>Intenso</span>
+                    <div class="px-2">
+                        <input type="range" id="nivelIntensidade" min="1" max="10" value="5" class="w-full h-3 bg-gradient-to-r from-green-300 via-yellow-300 to-red-400 rounded-lg appearance-none cursor-pointer slider-orange transition-all duration-200 hover:scale-105">
+                        <div class="flex justify-between text-xs text-gray-500 mt-2 px-1">
+                            <span class="flex items-center">
+                                <div class="w-2 h-2 bg-green-400 rounded-full mr-1"></div>
+                                Fraco
+                            </span>
+                            <span class="flex items-center">
+                                <div class="w-2 h-2 bg-red-400 rounded-full mr-1"></div>
+                                Intenso
+                            </span>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Descrição do Motivo -->
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">O que está causando esse sentimento?</label>
-                    <textarea id="descricaoMotivo" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none" rows="3" placeholder="Descreva o que está acontecendo ou o que causou esse sentimento..." required></textarea>
+                <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-gray-700 flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                        O que está causando esse sentimento?
+                    </label>
+                    <textarea id="descricaoMotivo" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 resize-none transition-all duration-200 input-focus" rows="4" placeholder="Descreva detalhadamente o que está acontecendo ou o que causou esse sentimento..." required></textarea>
+                    <div class="text-xs text-gray-500 flex items-center">
+                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Seja específico para ajudar a identificar padrões futuros
+                    </div>
                 </div>
 
                 <!-- Botões -->
-                <div class="flex space-x-3">
-                    <button type="button" onclick="closeSentimentModal()" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                <div class="flex space-x-3 pt-4">
+                    <button type="button" onclick="closeSentimentModal()" class="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 font-medium btn-secondary">
                         Cancelar
                     </button>
-                    <button type="submit" class="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors duration-200">
-                        Registrar Sentimento
+                    <button type="submit" class="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 btn-primary">
+                        <span class="flex items-center justify-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                            </svg>
+                            Registrar Sentimento
+                        </span>
                     </button>
                 </div>
             </form>
@@ -250,42 +377,97 @@
     </div>
 
     <script>
-            function showNotification(message, type = 'info', duration = 4000) {
+        // Funções utilitárias para UX melhorada
+        function showGlobalLoading() {
+            const loading = document.getElementById('globalLoading');
+            loading.classList.remove('hidden');
+            loading.classList.add('flex');
+        }
+
+        function hideGlobalLoading() {
+            const loading = document.getElementById('globalLoading');
+            loading.classList.add('hidden');
+            loading.classList.remove('flex');
+        }
+
+        function setButtonLoading(buttonElement, loading = true) {
+            if (loading) {
+                buttonElement.disabled = true;
+                const originalText = buttonElement.textContent;
+                buttonElement.dataset.originalText = originalText;
+                buttonElement.innerHTML = `
+                    <div class="flex items-center justify-center">
+                        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Carregando...
+                    </div>
+                `;
+                buttonElement.classList.add('opacity-75');
+            } else {
+                buttonElement.disabled = false;
+                buttonElement.textContent = buttonElement.dataset.originalText || 'Enviar';
+                buttonElement.classList.remove('opacity-75');
+            }
+        }
+
+        function shakeElement(element) {
+            element.classList.add('animate-shake');
+            setTimeout(() => {
+                element.classList.remove('animate-shake');
+            }, 500);
+        }
+
+        function bounceInElement(element) {
+            element.classList.add('animate-bounce-in');
+            setTimeout(() => {
+                element.classList.remove('animate-bounce-in');
+            }, 600);
+        }
+
+        // Sistema de notificações melhorado
+                    function showNotification(message, type = 'success', duration = 4000) {
             const container = document.getElementById('notifications');
             const notificationId = 'notification-' + Date.now();
 
-            // Definir cores e ícones por tipo
+            // Estilos baseados no tipo
             const styles = {
                 success: {
-                    bg: 'bg-green-50 border-green-200',
-                    text: 'text-green-800',
-                    icon: `<svg class="w-6 h-6 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
-                        </svg>`,
+                    bg: 'bg-emerald-50 border-emerald-200',
+                    text: 'text-emerald-800',
+                    icon: `<div class="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center">
+                            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                           </div>`,
                     title: 'Sucesso!'
                 },
                 error: {
                     bg: 'bg-red-50 border-red-200',
                     text: 'text-red-800',
-                    icon: `<svg class="w-6 h-6 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"/>
-                        </svg>`,
+                    icon: `<div class="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center">
+                            <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                           </div>`,
                     title: 'Erro!'
                 },
                 warning: {
                     bg: 'bg-yellow-50 border-yellow-200',
                     text: 'text-yellow-800',
-                    icon: `<svg class="w-6 h-6 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"/>
-                        </svg>`,
+                    icon: `<div class="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center">
+                            <svg class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                            </svg>
+                           </div>`,
                     title: 'Atenção!'
                 },
                 info: {
                     bg: 'bg-blue-50 border-blue-200',
                     text: 'text-blue-800',
-                    icon: `<svg class="w-6 h-6 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"/>
-                        </svg>`,
+                    icon: `<div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                           </div>`,
                     title: 'Informação'
                 }
             };
@@ -296,27 +478,32 @@
             const notification = document.createElement('div');
             notification.id = notificationId;
             notification.className = `
-                2-96 ${style.bg} border-2 ${style.text} rounded-xl shadow-xl
-                transform transition-all duration-300 ease-in-out translate-x-full opacity-0
+                max-w-sm w-full ${style.bg} border-2 ${style.text} rounded-xl shadow-lg
+                transform transition-all duration-500 ease-out translate-x-full opacity-0
+                hover:scale-105 cursor-pointer
             `;
 
             notification.innerHTML = `
-                <div class="p-5">
+                <div class="p-4">
                     <div class="flex items-start">
                         <div class="flex-shrink-0">
                             ${style.icon}
                         </div>
-                        <div class="ml-4 flex-1">
+                        <div class="ml-3 flex-1">
                             <p class="text-sm font-semibold">${style.title}</p>
                             <p class="mt-1 text-sm leading-relaxed">${message}</p>
                         </div>
-                        <div class="ml-4 flex-shrink-0 flex">
-                            <button onclick="removeNotification('${notificationId}')" class="rounded-md inline-flex text-gray-400 hover:text-gray-600 focus:outline-none">
-                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <div class="ml-4 flex-shrink-0">
+                            <button onclick="removeNotification('${notificationId}')" class="rounded-full p-1 hover:bg-white hover:bg-opacity-20 transition-colors duration-200 focus:outline-none">
+                                <svg class="w-4 h-4 ${style.text} opacity-60 hover:opacity-100" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/>
                                 </svg>
                             </button>
                         </div>
+                    </div>
+                    <!-- Barra de progresso -->
+                    <div class="mt-3 w-full bg-white bg-opacity-30 rounded-full h-1">
+                        <div class="bg-current h-1 rounded-full animate-progress" style="width: 100%; animation: progress ${duration}ms linear;"></div>
                     </div>
                 </div>
             `;
@@ -353,14 +540,27 @@
             const horario = document.getElementById('horarioAtual').value;
             const descricao = document.getElementById('descricaoMotivo').value.trim();
 
+            // Validações com feedback visual melhorado
+            const sentimentSelect = document.getElementById('tipoSentimento');
+            const descricaoTextarea = document.getElementById('descricaoMotivo');
+
             if (!tipoSentimento) {
+                shakeElement(sentimentSelect);
                 showNotification('Por favor, selecione como você está se sentindo', 'warning');
+                sentimentSelect.focus();
                 return;
             }
+
             if (!descricao) {
+                shakeElement(descricaoTextarea);
                 showNotification('Por favor, adicione uma descrição para continuar', 'warning');
+                descricaoTextarea.focus();
                 return;
             }
+
+            // Feedback visual no botão
+            const submitButton = event.target.querySelector('button[type="submit"]');
+            setButtonLoading(submitButton, true);
 
             try {
                 const url = sentimentoId
@@ -384,34 +584,113 @@
                 });
 
                 if (response.ok) {
+                    // Sucesso com animação
+                    bounceInElement(submitButton);
                     showNotification(sentimentoId ? 'Sentimento atualizado com sucesso!' : 'Sentimento registrado com sucesso!', 'success');
                     closeSentimentModal();
+
+                    // Reset form
+                    document.getElementById('sentimentForm').reset();
+                    document.getElementById('sentimentoId').value = '';
+                    document.getElementById('nivelDisplay').textContent = '5';
+
+                    // Atualizar dados se possível
                     if (typeof atualizarSentimentoCard === 'function') {
                         atualizarSentimentoCard();
                     } else {
-                        location.reload();
+                        setTimeout(() => location.reload(), 1000);
                     }
                 } else {
                     const error = await response.json();
+                    shakeElement(submitButton);
                     showNotification('Erro ao salvar: ' + (error.message || 'Algo deu errado'), 'error');
                 }
             } catch (error) {
                 console.error('Erro:', error);
+                shakeElement(submitButton);
                 showNotification('Erro de conexão. Verifique sua internet e tente novamente.', 'error');
+            } finally {
+                setButtonLoading(submitButton, false);
             }
         }
         function closeSentimentModal(){
             const modalSentiment = document.getElementById('sentimentModal');
             const sentimentContent = document.getElementById('sentimentModalContent');
 
-            modalSentiment.classList.add('hidden');
-            modalSentiment.classList.remove('flex');
+            // Animar saída
+            sentimentContent.classList.add('scale-95', 'opacity-0');
+            sentimentContent.classList.remove('scale-100', 'opacity-100');
 
             setTimeout(() => {
-                sentimentContent.classList.add('scale-95', 'opacity-0');
-                sentimentContent.classList.remove('scale-100', 'opacity-100');
-            }, 10);
+                modalSentiment.classList.add('hidden');
+                modalSentiment.classList.remove('flex');
+            }, 300);
+
+            // Reset form
+            document.getElementById('sentimentForm').reset();
+            document.getElementById('sentimentoId').value = '';
+            document.getElementById('nivelDisplay').textContent = '5';
         }
+
+        // Melhorar a função de abertura do modal
+        function openSentimentModal(){
+            const modalSentiment = document.getElementById('sentimentModal');
+            const sentimentContent = document.getElementById('sentimentModalContent');
+
+            const date = new Date();
+            const hora = date.getHours().toString().padStart(2, '0');
+            const minutos = date.getMinutes().toString().padStart(2, '0');
+
+            const horarioFormatado = hora + ":" + minutos;
+
+            document.getElementById('horarioAtual').value = horarioFormatado;
+
+            modalSentiment.classList.remove('hidden');
+            modalSentiment.classList.add('flex');
+
+            // Animação de entrada melhorada
+            setTimeout(() => {
+                sentimentContent.classList.remove('scale-95', 'opacity-0');
+                sentimentContent.classList.add('scale-100', 'opacity-100');
+                bounceInElement(sentimentContent);
+            }, 50);
+
+            // Configurar o slider de intensidade
+            document.getElementById('nivelIntensidade').addEventListener('input', function() {
+                const valor = this.value;
+                const display = document.getElementById('nivelDisplay');
+                display.textContent = valor;
+
+                // Animar o display
+                display.classList.add('animate-pulse-gentle');
+                setTimeout(() => {
+                    display.classList.remove('animate-pulse-gentle');
+                }, 300);
+            });
+
+            // Foco no primeiro campo
+            setTimeout(() => {
+                document.getElementById('tipoSentimento').focus();
+            }, 400);
+        }
+
+        // Adicionar eventos de teclado para acessibilidade
+        document.addEventListener('keydown', function(e) {
+            const modal = document.getElementById('sentimentModal');
+            if (!modal.classList.contains('hidden') && e.key === 'Escape') {
+                closeSentimentModal();
+            }
+        });
+
+        // Click fora do modal para fechar
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('sentimentModal');
+            const modalContent = document.getElementById('sentimentModalContent');
+
+            if (!modal.classList.contains('hidden') && e.target === modal) {
+                closeSentimentModal();
+            }
+        });
 
         // JavaScript para controlar o menu mobile
         document.addEventListener('DOMContentLoaded', function() {
