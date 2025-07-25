@@ -6,12 +6,31 @@
         <div class="flex-1 flex items-center justify-center p-4 sm:p-8 order-1 lg:order-2">
             <div class="max-w-sm w-full">
                 <div class="text-center mb-6 sm:mb-8">
-                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Criar Conta</h1>
-                    <p class="text-gray-600 text-sm sm:text-base">Junte-se ao Relatopia</p>
+                    @if(request('convite'))
+                        <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-4">
+                            <div class="flex items-center justify-center mb-2">
+                                <svg class="w-5 h-5 text-emerald-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path>
+                                </svg>
+                                <span class="text-emerald-800 font-semibold">Você foi convidado!</span>
+                            </div>
+                            <p class="text-emerald-700 text-sm">Complete seu cadastro para aceitar o convite e começar a usar o Relatópia.</p>
+                        </div>
+                    @endif
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
+                        {{ request('convite') ? 'Aceitar Convite' : 'Criar Conta' }}
+                    </h1>
+                    <p class="text-gray-600 text-sm sm:text-base">
+                        {{ request('convite') ? 'Finalize seu cadastro' : 'Junte-se ao Relatopia' }}
+                    </p>
                 </div>
 
                 <form method="POST" action="{{ route('cadastro') }}" class="space-y-4 sm:space-y-5">
                     @csrf
+
+                    @if(request('convite'))
+                        <input type="hidden" name="convite_id" value="{{ request('convite') }}">
+                    @endif
 
                     <!-- Campo Nome -->
                     <div>
@@ -26,11 +45,12 @@
                         <input
                             type="email"
                             name="email"
-                            class="w-full px-4 py-3 border @error('email') border-red-500 @else border-gray-300 @enderror rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 text-sm sm:text-base"
+                            class="w-full px-4 py-3 border @error('email') border-red-500 @else border-gray-300 @enderror rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 text-sm sm:text-base @if(request('email')) bg-gray-50 @endif"
                             placeholder="Digite seu email"
-                            value="{{ old('email') }}"
+                            value="{{ old('email', request('email')) }}"
                             autocomplete="email"
                             spellcheck="false"
+                            @if(request('email')) readonly @endif
                         >
                         @error('email')
                             <p class="text-red-500 text-sm mt-1 flex items-center">

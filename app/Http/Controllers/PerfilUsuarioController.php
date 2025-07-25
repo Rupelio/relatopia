@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\ConviteRelacionamentoMail;
+use App\Mail\ConviteCadastroMail;
 use App\Models\Relacionamento;
 use App\Models\RelacionamentoPermissao;
 use App\Models\Usuario;
@@ -82,42 +83,60 @@ class PerfilUsuarioController extends Controller
         ]);
     }
     public function vincularCoparticipante(Request $request){
+        // Validação unificada - sempre permite email não cadastrado
         $request->validate([
-            'email' => 'required|email|exists:usuarios,email'
+            'email' => 'required|email'
         ], [
             'email.required' => 'Informe o e-mail do co-participante',
-            'email.email' =>'E-mail inválido',
-            'email.exists' => 'Usuário não encontrado'
+            'email.email' => 'E-mail inválido'
         ]);
 
         $user = $request->user();
-        $coparticipante = Usuario::where('email', $request->email)->first();
+        $fromOnboarding = $request->input('from_onboarding', false);
 
-        $existe = Relacionamento::where(function($query) use ($user, $coparticipante){
-            $query->where('user_id_1', $user->id)->where('user_id_2', $coparticipante->id);
-        })->orWhere(function($query) use ($user, $coparticipante){
-            $query->where('user_id_1', $coparticipante->id)->where('user_id_2', $user->id);
-        })->first();
-
-        if($existe){
-            if($existe->status === 'pendente') {
-                return response()->json(['message' => 'Já existe um convite pendente entre vocês.'], 422);
-            }
-            return response()->json(['message' => 'Já existe um relacionamento ativo entre vocês.'], 422);
+        // Verificar se não está tentando convidar a si mesmo
+        if (strtolower($request->email) === strtolower($user->email)) {
+            return response()->json(['message' => 'Você não pode convidar a si mesmo.'], 422);
         }
 
-        $relacionamento = Relacionamento::create([
-            'user_id_1' => $user->id,
-            'user_id_2' => $coparticipante->id,
-            'status' => 'pendente',
-            'token' => Str::random(40),
-        ]);
+        $coparticipante = Usuario::where('email', $request->email)->first();
 
-        $relacionamento->criarPermissoesPadrao();
+        // Se o usuário existe, verificar se já há relacionamento
+        if ($coparticipante) {
+            $existe = Relacionamento::where(function($query) use ($user, $coparticipante){
+                $query->where('user_id_1', $user->id)->where('user_id_2', $coparticipante->id);
+            })->orWhere(function($query) use ($user, $coparticipante){
+                $query->where('user_id_1', $coparticipante->id)->where('user_id_2', $user->id);
+            })->first();
 
-        Mail::to($coparticipante->email)->send(new ConviteRelacionamentoMail($relacionamento));
+            if($existe){
+                if($existe->status === 'pendente') {
+                    return response()->json(['message' => 'Já existe um convite pendente entre vocês.'], 422);
+                }
+                return response()->json(['message' => 'Já existe um relacionamento ativo entre vocês.'], 422);
+            }
 
-        return response()->json(['message' => 'Convite enviado! Aguarde a aceitação do co-participante.']);
+            // Criar relacionamento com usuário cadastrado
+            $relacionamento = Relacionamento::create([
+                'user_id_1' => $user->id,
+                'user_id_2' => $coparticipante->id,
+                'status' => 'pendente',
+                'token' => Str::random(40),
+            ]);
+
+            $relacionamento->criarPermissoesPadrao();
+            Mail::to($coparticipante->email)->send(new ConviteRelacionamentoMail($relacionamento));
+
+            return response()->json(['message' => 'Convite enviado! Aguarde a aceitação do co-participante.']);
+        } else {
+            // Usuário não existe - enviar convite de cadastro
+            try {
+                Mail::to($request->email)->send(new ConviteCadastroMail($user, $request->email));
+                return response()->json(['message' => 'Convite enviado para que a pessoa se cadastre na plataforma! Assim que ela criar a conta, vocês serão automaticamente vinculados.']);
+            } catch (\Exception $e) {
+                return response()->json(['message' => 'Erro ao enviar convite de cadastro. Tente novamente.'], 500);
+            }
+        }
     }
     public function desfazerVinculo($id){
         $relacionamento = Relacionamento::findOrFail($id);
@@ -172,5 +191,26 @@ class PerfilUsuarioController extends Controller
         $relacionamento->delete();
 
         return response()->json(['message' => 'Convite cancelado.']);
+    }
+
+    public function onboarding()
+    {
+        $user = Auth::user();
+
+        // Se já completou o onboarding (tem dados do relacionamento), redirecionar para dashboard
+        $onboarding_completed = !empty($user->data_inicio_relacionamento) && !empty($user->status_relacionamento);
+
+        if ($onboarding_completed) {
+            return redirect()->route('dashboard');
+        }
+
+        return view('interface.onboarding');
+    }
+
+    public function finalizarOnboarding(Request $request)
+    {
+        // Por ora, apenas retorna sucesso pois a lógica já foi aplicada
+        // quando os dados do relacionamento foram salvos
+        return response()->json(['message' => 'Onboarding finalizado com sucesso!']);
     }
 }

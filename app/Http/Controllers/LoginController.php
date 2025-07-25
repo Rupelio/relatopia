@@ -26,6 +26,21 @@ class LoginController extends Controller
             ]);
             if(Auth::attempt($credentials)){
                 $request->session()->regenerate();
+
+                $user = Auth::user();
+
+                // Verificar se email está verificado
+                if (!$user->hasVerifiedEmail()) {
+                    return redirect()->route('verification.notice');
+                }
+
+                // Verificar se completou onboarding
+                $onboarding_completed = !empty($user->data_inicio_relacionamento) && !empty($user->status_relacionamento);
+
+                if (!$onboarding_completed) {
+                    return redirect()->route('onboarding');
+                }
+
                 return redirect()->intended('/dashboard');
             }
             return back()->withErrors([

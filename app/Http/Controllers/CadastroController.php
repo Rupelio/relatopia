@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Usuario;
+use App\Models\Relacionamento;
 use App\Mail\VerificarEmailMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -42,6 +43,34 @@ class CadastroController extends Controller
                 'email' => $request->email,
                 'password' => $request->password
             ]);
+
+            // Se veio de um convite, criar relacionamento pendente
+            if ($request->convite_id) {
+                try {
+                    $remetente = Usuario::findOrFail(base64_decode($request->convite_id));
+
+                    // Verificar se não existe relacionamento já
+                    $relacionamentoExistente = Relacionamento::where(function($query) use ($user, $remetente){
+                        $query->where('user_id_1', $remetente->id)->where('user_id_2', $user->id);
+                    })->orWhere(function($query) use ($user, $remetente){
+                        $query->where('user_id_1', $user->id)->where('user_id_2', $remetente->id);
+                    })->first();
+
+                    if (!$relacionamentoExistente) {
+                        $relacionamento = Relacionamento::create([
+                            'user_id_1' => $remetente->id,
+                            'user_id_2' => $user->id,
+                            'status' => 'pendente',
+                            'token' => \Illuminate\Support\Str::random(40),
+                        ]);
+
+                        $relacionamento->criarPermissoesPadrao();
+                    }
+                } catch (\Exception $e) {
+                    // Log do erro mas não impede o cadastro
+                    Log::error('Erro ao processar convite: ' . $e->getMessage());
+                }
+            }
 
             // Faz login automático do usuário
             Auth::login($user);

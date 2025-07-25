@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
+            'onboarding.completed' => \App\Http\Middleware\OnboardingCompleted::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

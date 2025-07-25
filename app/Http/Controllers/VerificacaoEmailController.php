@@ -19,7 +19,15 @@ class VerificacaoEmailController extends Controller
     public function mostrarVerificacaoPendente()
     {
         if (Auth::user() && Auth::user()->hasVerifiedEmail()) {
-            return redirect()->route('dashboard');
+            // Se verificado, redirecionar baseado no onboarding
+            $user = Auth::user();
+            $onboarding_completed = !empty($user->data_inicio_relacionamento) && !empty($user->status_relacionamento);
+
+            if ($onboarding_completed) {
+                return redirect()->route('dashboard');
+            } else {
+                return redirect()->route('onboarding');
+            }
         }
 
         return view('auth.verificar-email');
@@ -79,12 +87,26 @@ class VerificacaoEmailController extends Controller
 
         // Verifica se já não está verificado
         if ($user->hasVerifiedEmail()) {
-            return redirect()->route('dashboard')->with('success', 'Seu email já estava verificado!');
+            // Se já verificado, redirecionar baseado no onboarding
+            $onboarding_completed = !empty($user->data_inicio_relacionamento) && !empty($user->status_relacionamento);
+
+            if ($onboarding_completed) {
+                return redirect()->route('dashboard')->with('success', 'Seu email já estava verificado!');
+            } else {
+                return redirect()->route('onboarding')->with('success', 'Seu email já estava verificado!');
+            }
         }
 
         // Marca como verificado
         $user->markEmailAsVerified();
 
-        return redirect()->route('dashboard')->with('success', 'Email verificado com sucesso! Bem-vindo ao Relatopia!');
+        // Redirecionar para onboarding se não completou, senão para dashboard
+        $onboarding_completed = !empty($user->data_inicio_relacionamento) && !empty($user->status_relacionamento);
+
+        if ($onboarding_completed) {
+            return redirect()->route('dashboard')->with('success', 'Email verificado com sucesso! Bem-vindo de volta ao Relatopia!');
+        } else {
+            return redirect()->route('onboarding')->with('success', 'Email verificado com sucesso! Vamos configurar seu relacionamento!');
+        }
     }
 }

@@ -32,9 +32,12 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    // Dashboard
-    Route::get('/dashboard', InterfaceUsuarioController::class)->name('dashboard');
-    Route::get('/perfil', [PerfilUsuarioController::class, 'index'])->name('perfil');
+    // Onboarding obrigatório
+    Route::get('/onboarding', [PerfilUsuarioController::class, 'onboarding'])->name('onboarding');
+
+    // Dashboard (com middleware para verificar onboarding)
+    Route::get('/dashboard', InterfaceUsuarioController::class)->name('dashboard')->middleware('onboarding.completed');
+    Route::get('/perfil', [PerfilUsuarioController::class, 'index'])->name('perfil')->middleware('onboarding.completed');
     Route::get('/historico', HistoricoSentimentoController::class)->name('historico');
     Route::get('/relacionamento/convite/{token}', [RelacionamentoController::class, 'mostrarConvite']);
     Route::post('/relacionamento/convite/{token}/aceitar', [RelacionamentoController::class, 'aceitarConvite']);
@@ -75,6 +78,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/sentimento/{id}', [SentimentoController::class, 'show']);
         Route::get('/estatisticasSentimento', [SentimentoController::class, 'estatisticasSentimento']);
         Route::post('/vincular-coparticipante', [PerfilUsuarioController::class, 'vincularCoparticipante']);
+        Route::post('/finalizar-onboarding', [PerfilUsuarioController::class, 'finalizarOnboarding']);
 
         // Logout
         Route::post('/logout', function () {

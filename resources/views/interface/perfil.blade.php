@@ -241,16 +241,46 @@
                         </div>
                         <!-- Seção: Vincular co-participante -->
                         <div class="bg-gray-50 rounded-lg p-6 space-y-4 mt-8">
+                            <div class="mb-4">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-2">Convidar Parceiro(a)</h3>
+                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                    <div class="flex items-start space-x-3">
+                                        <div class="flex-shrink-0">
+                                            <svg class="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-sm font-semibold text-blue-800 mb-1">Como funciona?</h4>
+                                            <ul class="text-blue-700 text-xs space-y-1">
+                                                <li>• <strong>Pessoa já cadastrada:</strong> Receberá um convite direto na plataforma</li>
+                                                <li>• <strong>Pessoa não cadastrada:</strong> Receberá um email para se cadastrar e será automaticamente vinculada</li>
+                                                <li>• Vocês compartilharão os mesmos dados do relacionamento</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <form id="vincularParticipanteForm" class="space-y-4">
                                 @csrf
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">E-mail do co-participante</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <svg class="w-4 h-4 inline mr-1 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path>
+                                        </svg>
+                                        E-mail do seu parceiro(a)
+                                    </label>
                                     <input type="email" name="email_coparticipante" id="email_coparticipante"
                                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
-                                        placeholder="Digite o e-mail da pessoa para vincular" required>
+                                        placeholder="exemplo@email.com" required>
+                                    <p class="text-xs text-gray-500 mt-1">A pessoa receberá um convite por email (mesmo que não tenha conta ainda)</p>
                                 </div>
-                                <button type="submit" class="bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700 transition-colors duration-200 font-medium">
-                                    Enviar convite
+                                <button type="submit" class="bg-gradient-to-r from-pink-500 to-pink-600 text-white px-6 py-3 rounded-lg hover:from-pink-600 hover:to-pink-700 transition-all duration-200 font-medium transform hover:scale-105 shadow-lg hover:shadow-xl">
+                                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                                    </svg>
+                                    Enviar Convite
                                 </button>
                             </form>
                         </div>
