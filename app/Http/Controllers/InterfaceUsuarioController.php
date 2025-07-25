@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Relacionamento;
 use App\Models\RelacionamentoItem;
 use App\Models\Sentimento;
+use App\Models\ListaDesejo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -15,10 +16,19 @@ class InterfaceUsuarioController extends Controller
      */
     public function __invoke(Request $request)
     {
-        $estatisticasRelacionamento = RelacionamentoItem::estatisticasPorUsuario(Auth::id());
-        $estatisticasSentimentos = Sentimento::estatisticaPorUsuario(Auth::id());
-        $sentimentoHoje = Sentimento::sentimentoHoje(Auth::id());
-        $ultimoSentimento = Sentimento::ultimoSentimento(Auth::id());
+        $user = Auth::user();
+        $estatisticasRelacionamento = RelacionamentoItem::estatisticasPorUsuario($user->id);
+        $estatisticasSentimentos = Sentimento::estatisticaPorUsuario($user->id);
+        $sentimentoHoje = Sentimento::sentimentoHoje($user->id);
+        $ultimoSentimento = Sentimento::ultimoSentimento($user->id);
+
+        // Estatísticas da Lista de Desejos
+        $listaDesejos = [
+            'total' => $user->listaDesejos()->count(),
+            'comprados' => $user->listaDesejos()->where('comprado', true)->count(),
+            'pendentes' => $user->listaDesejos()->where('comprado', false)->count()
+        ];
+
         return view('interface.dashboard', [
             'estatisticas' => [
                 'relacionamento' => $estatisticasRelacionamento,
@@ -26,7 +36,8 @@ class InterfaceUsuarioController extends Controller
                     'total' => $estatisticasSentimentos['total'],
                     'hoje' => $sentimentoHoje,
                     'ultimo' => $ultimoSentimento
-                ]
+                ],
+                'lista_desejos' => $listaDesejos
             ]
         ]);
     }
@@ -47,6 +58,13 @@ class InterfaceUsuarioController extends Controller
         $sentimentoHoje = Sentimento::sentimentoHoje($parceiroId);
         $ultimoSentimento = Sentimento::ultimoSentimento($parceiroId);
 
+        // Estatísticas da Lista de Desejos do parceiro
+        $listaDesejos = [
+            'total' => ListaDesejo::where('usuario_id', $parceiroId)->count(),
+            'comprados' => ListaDesejo::where('usuario_id', $parceiroId)->where('comprado', true)->count(),
+            'pendentes' => ListaDesejo::where('usuario_id', $parceiroId)->where('comprado', false)->count()
+        ];
+
         return view('interface.dashboard', [
             'estatisticas' => [
                 'relacionamento' => $estatisticasRelacionamento,
@@ -54,7 +72,8 @@ class InterfaceUsuarioController extends Controller
                     'total' => $estatisticasSentimentos['total'],
                     'hoje' => $sentimentoHoje,
                     'ultimo' => $ultimoSentimento,
-                ]
+                ],
+                'lista_desejos' => $listaDesejos
             ],
             'relacionamento' => $relacionamento,
             'somenteLeitura' => true

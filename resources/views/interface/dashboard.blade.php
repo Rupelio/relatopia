@@ -348,7 +348,6 @@
                         progressPercentage.textContent = '0%';
                     }
 
-                    console.log('✅ Estatísticas atualizadas com sucesso:', stats);
                 }
             } catch (error) {
                 console.error('❌ Erro ao atualizar estatísticas:', error);
@@ -425,14 +424,622 @@
 
         // CORREÇÃO: Inicializar atualização automática quando a página carregar
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Dashboard carregado - iniciando sistema de atualização automática');
-
             // Primeira atualização após 1 segundo para garantir que tudo está carregado
             setTimeout(atualizarEstatisticas, 1000);
+            setTimeout(atualizarListaDesejos, 1500);
 
             // Atualização periódica a cada 30 segundos (opcional)
             setInterval(atualizarEstatisticas, 30000);
+            setInterval(atualizarListaDesejos, 30000);
+
+            // Configurar event listeners dos modais
+            setupModalEventListeners();
         });
+
+        function setupModalEventListeners() {
+            // Fechar modal de lista de desejos clicando fora
+            const listaDesejoModal = document.getElementById('listaDesejoModal');
+            if (listaDesejoModal) {
+                listaDesejoModal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeListaDesejoModal();
+                    }
+                });
+            }
+
+            // Fechar modal de comprar clicando fora
+            const comprarModal = document.getElementById('comprarModal');
+            if (comprarModal) {
+                comprarModal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeComprarModal();
+                    }
+                });
+            }
+
+            // Fechar modal de remover clicando fora
+            const removerModal = document.getElementById('removerModal');
+            if (removerModal) {
+                removerModal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeRemoverModal();
+                    }
+                });
+            }
+
+            // Fechar modal de observações clicando fora
+            const observacoesModal = document.getElementById('observacoesModal');
+            if (observacoesModal) {
+                observacoesModal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeObservacoesModal();
+                    }
+                });
+            }
+
+            // Fechar modais com ESC
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeModal();
+                    closeListaDesejoModal();
+                    closeComprarModal();
+                    closeRemoverModal();
+                    closeObservacoesModal();
+                }
+            });
+        }
+
+        // ===== FUNÇÕES DA LISTA DE DESEJOS =====
+
+        async function atualizarListaDesejos() {
+            try {
+                const endpoint = isDashboardParceiro
+                    ? `/api/parceiro/${relacionamentoId}/lista-desejos/estatisticas`
+                    : '/api/lista-desejos/estatisticas';
+
+                const response = await fetch(endpoint, {
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+
+                if (response.ok) {
+                    const stats = await response.json();
+                    const updateElement = (selector, value) => {
+                        const element = document.querySelector(selector);
+                        if (element) {
+                            element.textContent = value;
+                        } else {
+                            console.warn(`⚠️ Elemento não encontrado: ${selector}`);
+                        }
+                    };
+
+                    updateElement('[data-stat="lista_desejos_total"]', stats.total);
+                    updateElement('[data-stat="lista_desejos_comprados"]', stats.comprados);
+                    updateElement('[data-stat="lista_desejos_pendentes"]', stats.pendentes);
+
+                    // Mostrar/ocultar indicador
+                    const indicator = document.getElementById('lista-desejos-indicator');
+                    if (indicator) {
+                        indicator.style.display = stats.total > 0 ? 'block' : 'none';
+                    }
+                } else {
+                    console.error('❌ Erro na resposta:', response.status, response.statusText);
+                    const errorText = await response.text();
+                    console.error('❌ Detalhes do erro:', errorText);
+                }
+            } catch (error) {
+                console.error('❌ Erro ao atualizar lista de desejos:', error);
+            }
+        }
+
+        function openListaDesejoModal() {
+            const modal = document.getElementById('listaDesejoModal');
+            const content = document.getElementById('listaDesejoModalContent');
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+
+            document.getElementById('titulo').focus();
+        }
+
+        function closeListaDesejoModal() {
+            const modal = document.getElementById('listaDesejoModal');
+            const content = document.getElementById('listaDesejoModalContent');
+
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.getElementById('listaDesejoForm').reset();
+            }, 300);
+        }
+
+        async function submitListaDesejoForm(event) {
+            event.preventDefault();
+
+            if (somenteLeitura) {
+                showNotification('Você não pode alterar os dados do parceiro.', 'warning');
+                return;
+            }
+
+            const formData = new FormData(event.target);
+            const data = {
+                titulo: formData.get('titulo'),
+                descricao: formData.get('descricao'),
+                link_compra: formData.get('link_compra'),
+                preco_estimado: formData.get('preco_estimado'),
+                prioridade: formData.get('prioridade')
+            };
+
+            if (!data.titulo.trim()) {
+                showNotification('Por favor, adicione um título para continuar', 'warning');
+                return;
+            }
+
+            // Mostrar loading no botão de submit
+            const submitButton = event.target.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            submitButton.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <div class="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                    <span>Adicionando...</span>
+                </div>
+            `;
+            submitButton.disabled = true;
+
+            try {
+                const response = await fetch('/api/lista-desejos', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showNotification(result.message, 'success');
+                    closeListaDesejoModal();
+
+                    // Forçar atualização das estatísticas com delay
+                    setTimeout(() => atualizarListaDesejos(), 100);
+                    setTimeout(() => atualizarListaDesejos(), 500);
+
+                    // Atualizar a lista se estiver aberta
+                    const listElement = document.querySelector('.card-list');
+                    if (listElement) {
+                        toggleListaDesejos();
+                        setTimeout(() => toggleListaDesejos(), 300);
+                    }
+                } else {
+                    const error = await response.json();
+                    showNotification(error.message || 'Erro ao adicionar item', 'error');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showNotification('Erro de conexão. Verifique sua internet e tente novamente.', 'error');
+            } finally {
+                // Restaurar botão
+                submitButton.innerHTML = originalText;
+                submitButton.disabled = false;
+            }
+        }
+
+        async function toggleListaDesejos() {
+            const cardElement = document.querySelector('#lista-desejos-content').closest('.bg-white');
+            let listElement = cardElement.querySelector('.card-list');
+            const button = document.querySelector('[onclick="toggleListaDesejos()"]');
+
+            if (listElement) {
+                listElement.remove();
+                button.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                        <span>Ver Lista</span>
+                    </div>
+                `;
+            } else {
+                // Mostrar loading no botão
+                button.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <div class="animate-spin w-4 h-4 border-2 border-pink-500 border-t-transparent rounded-full"></div>
+                        <span>Carregando...</span>
+                    </div>
+                `;
+
+                // Mostrar indicador de carregamento no card
+                const loadingHTML = `
+                    <div class="card-list mt-4 p-6 bg-gray-50 rounded-xl text-center">
+                        <div class="animate-spin w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                        <p class="text-gray-500 text-sm">Carregando lista de desejos...</p>
+                    </div>
+                `;
+                cardElement.insertAdjacentHTML('beforeend', loadingHTML);
+
+                try {
+                    const endpoint = isDashboardParceiro
+                        ? `/api/parceiro/${relacionamentoId}/lista-desejos`
+                        : '/api/lista-desejos';
+
+                    const response = await fetch(endpoint, {
+                        credentials: 'include',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        }
+                    });
+                    const items = await response.json();
+
+                    // Remover indicador de carregamento
+                    const loadingElement = cardElement.querySelector('.card-list');
+                    if (loadingElement) loadingElement.remove();
+
+                    if (items.length > 0) {
+                        let listHTML = '<div class="card-list mt-4 p-4 bg-gray-50 rounded-xl"><ul class="space-y-3">';
+
+                        items.forEach(item => {
+                            const statusClass = item.comprado
+                                ? 'bg-green-50 border-green-200 text-green-800'
+                                : 'bg-white border-gray-200 text-gray-800';
+
+                            const statusIcon = item.comprado ? '✅' : item.prioridade_icon;
+                            const statusText = item.comprado
+                                ? `Comprado por ${item.comprado_por} em ${item.data_compra}`
+                                : `Prioridade: ${item.prioridade}`;
+
+                            listHTML += `
+                                <li class="flex items-start gap-3 p-4 rounded-xl border-2 ${statusClass} transition-all duration-200 hover:shadow-md">
+                                    <div class="text-xl flex-shrink-0">${statusIcon}</div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-start justify-between">
+                                            <div class="flex-1">
+                                                <h4 class="font-bold text-base text-gray-800">${item.titulo}</h4>
+                                                ${item.descricao ? `<p class="text-sm text-gray-600 mt-1 line-clamp-2">${item.descricao}</p>` : ''}
+                                                <div class="flex items-center gap-3 mt-3 text-sm">
+                                                    <span class="font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">${item.preco_formatado}</span>
+                                                    <span class="text-gray-500 bg-gray-100 px-2 py-1 rounded-full text-xs">${statusText}</span>
+                                                    ${item.comprado && item.observacoes ? `
+                                                        <button onclick="verObservacoes('${item.observacoes.replace(/'/g, "\\'")}', '${item.titulo.replace(/'/g, "\\'")}', '${item.comprado_por}')"
+                                                                class="text-blue-600 bg-blue-50 px-2 py-1 rounded-full text-xs hover:bg-blue-100 transition-colors"
+                                                                title="Clique para ver as observações">
+                                                            💬 Ver observações
+                                                        </button>
+                                                    ` : ''}
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-2 ml-4">
+                                                ${item.link_compra ? `
+                                                    <a href="${item.link_compra}" target="_blank"
+                                                       class="flex items-center justify-center w-10 h-10 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg transition-colors"
+                                                       title="Abrir link de compra">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                                        </svg>
+                                                    </a>
+                                                ` : ''}
+                                                ${!item.comprado ? `
+                                                    <button onclick="marcarComoComprado(${item.id})"
+                                                            class="flex items-center justify-center w-10 h-10 bg-green-100 hover:bg-green-200 text-green-600 rounded-lg transition-colors"
+                                                            title="Marcar como comprado">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                        </svg>
+                                                    </button>
+                                                ` : ''}
+                                                ${!item.comprado && !isDashboardParceiro ? `
+                                                    <button onclick="removerItemDesejo(${item.id})"
+                                                            class="flex items-center justify-center w-10 h-10 bg-red-100 hover:bg-red-200 text-red-600 rounded-lg transition-colors"
+                                                            title="Remover item">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                        </svg>
+                                                    </button>
+                                                ` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                            `;
+                        });
+
+                        listHTML += '</ul></div>';
+                        cardElement.insertAdjacentHTML('beforeend', listHTML);
+                        button.innerHTML = `
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 11l3-3m0 0l3 3m-3-3v8"></path>
+                                </svg>
+                                <span>Ocultar Lista</span>
+                            </div>
+                        `;
+                    } else {
+                        const emptyMessage = isDashboardParceiro
+                            ? 'Seu parceiro ainda não adicionou itens à lista de desejos'
+                            : 'Nenhum item na lista de desejos ainda';
+                        const emptySubMessage = isDashboardParceiro
+                            ? 'Quando seu parceiro adicionar itens, eles aparecerão aqui e você poderá comprá-los!'
+                            : 'Clique em "Adicionar" para começar a criar sua lista de desejos!';
+
+                        const emptyHTML = `
+                            <div class="card-list mt-4 p-8 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl text-center">
+                                <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l-1 12H6L5 9z"></path>
+                                    </svg>
+                                </div>
+                                <h4 class="font-semibold text-gray-700 mb-2">${emptyMessage}</h4>
+                                <p class="text-sm text-gray-500">${emptySubMessage}</p>
+                            </div>
+                        `;
+                        cardElement.insertAdjacentHTML('beforeend', emptyHTML);
+                        button.innerHTML = `
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 11l3-3m0 0l3 3m-3-3v8"></path>
+                                </svg>
+                                <span>Ocultar Lista</span>
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    // Remover indicador de carregamento em caso de erro
+                    const loadingElement = cardElement.querySelector('.card-list');
+                    if (loadingElement) loadingElement.remove();
+
+                    button.innerHTML = `
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                            <span>Ver Lista</span>
+                        </div>
+                    `;
+
+                    // Mostrar mensagem de erro
+                    const errorHTML = `
+                        <div class="card-list mt-4 p-6 bg-red-50 rounded-xl text-center">
+                            <div class="text-red-500 mb-2">
+                                <svg class="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                </svg>
+                            </div>
+                            <p class="text-red-600 font-medium mb-1">Erro ao carregar lista</p>
+                            <p class="text-red-500 text-sm">Tente novamente em alguns instantes</p>
+                        </div>
+                    `;
+                    cardElement.insertAdjacentHTML('beforeend', errorHTML);
+
+                    console.error('Erro ao carregar lista de desejos:', error);
+                }
+            }
+        }
+
+        async function marcarComoComprado(itemId) {
+            // Abrir modal customizado em vez de usar confirm/prompt
+            openComprarModal(itemId);
+        }
+
+        function openComprarModal(itemId) {
+            const modal = document.getElementById('comprarModal');
+            const content = document.getElementById('comprarModalContent');
+
+            // Guardar o ID do item no modal
+            modal.setAttribute('data-item-id', itemId);
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+
+            document.getElementById('observacoes').focus();
+        }
+
+        function closeComprarModal() {
+            const modal = document.getElementById('comprarModal');
+            const content = document.getElementById('comprarModalContent');
+
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.getElementById('comprarForm').reset();
+            }, 300);
+        }
+
+        async function confirmarCompra() {
+            const modal = document.getElementById('comprarModal');
+            const itemId = modal.getAttribute('data-item-id');
+            const observacoes = document.getElementById('observacoes').value.trim();
+
+            // Mostrar loading no botão
+            const submitButton = document.getElementById('confirmarCompraBtn');
+            const originalText = submitButton.innerHTML;
+            submitButton.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <div class="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                    <span>Confirmando...</span>
+                </div>
+            `;
+            submitButton.disabled = true;
+
+            try {
+                const response = await fetch(`/api/lista-desejos/${itemId}/comprar`, {
+                    method: 'PUT',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({ observacoes })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showNotification(result.message, 'success');
+                    closeComprarModal();
+
+                    // Forçar atualização das estatísticas com delay
+                    setTimeout(() => atualizarListaDesejos(), 100);
+                    setTimeout(() => atualizarListaDesejos(), 500);
+
+                    // Atualizar a lista se estiver aberta
+                    const listElement = document.querySelector('.card-list');
+                    if (listElement) {
+                        toggleListaDesejos();
+                        setTimeout(() => toggleListaDesejos(), 300);
+                    }
+                } else {
+                    const error = await response.json();
+                    showNotification(error.message || 'Erro ao marcar como comprado', 'error');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showNotification('Erro de conexão. Tente novamente.', 'error');
+            } finally {
+                // Restaurar botão
+                submitButton.innerHTML = originalText;
+                submitButton.disabled = false;
+            }
+        }
+
+        async function removerItemDesejo(itemId) {
+            // Abrir modal customizado em vez de usar confirm
+            openRemoverModal(itemId);
+        }
+
+        function openRemoverModal(itemId) {
+            const modal = document.getElementById('removerModal');
+            const content = document.getElementById('removerModalContent');
+
+            // Guardar o ID do item no modal
+            modal.setAttribute('data-item-id', itemId);
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeRemoverModal() {
+            const modal = document.getElementById('removerModal');
+            const content = document.getElementById('removerModalContent');
+
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 300);
+        }
+
+        async function confirmarRemocao() {
+            const modal = document.getElementById('removerModal');
+            const itemId = modal.getAttribute('data-item-id');
+
+            // Mostrar loading no botão
+            const submitButton = document.getElementById('confirmarRemocaoBtn');
+            const originalText = submitButton.innerHTML;
+            submitButton.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <div class="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                    <span>Removendo...</span>
+                </div>
+            `;
+            submitButton.disabled = true;
+
+            try {
+                const response = await fetch(`/api/lista-desejos/${itemId}`, {
+                    method: 'DELETE',
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showNotification(result.message, 'success');
+                    closeRemoverModal();
+                    atualizarListaDesejos();
+
+                    // Atualizar a lista se estiver aberta
+                    const listElement = document.querySelector('.card-list');
+                    if (listElement) {
+                        toggleListaDesejos();
+                        setTimeout(() => toggleListaDesejos(), 200);
+                    }
+                } else {
+                    const error = await response.json();
+                    showNotification(error.message || 'Erro ao remover item', 'error');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showNotification('Erro de conexão. Tente novamente.', 'error');
+            } finally {
+                // Restaurar botão
+                submitButton.innerHTML = originalText;
+                submitButton.disabled = false;
+            }
+        }
+
+        function verObservacoes(observacoes, titulo, compradorPor) {
+            const modal = document.getElementById('observacoesModal');
+            const content = document.getElementById('observacoesModalContent');
+
+            // Preencher dados do modal
+            document.getElementById('observacoesTitulo').textContent = titulo;
+            document.getElementById('observacoesComprador').textContent = compradorPor;
+            document.getElementById('observacoesTexto').textContent = observacoes;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeObservacoesModal() {
+            const modal = document.getElementById('observacoesModal');
+            const content = document.getElementById('observacoesModalContent');
+
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 300);
+        }
     </script>
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Header com melhor visual -->
@@ -711,45 +1318,60 @@
                     </div>
                 </div>
             </div>
-            <!-- Card 8: Em breve -->
+            <!-- Card 7: Lista de Desejos -->
             <div class="group bg-white rounded-2xl shadow-lg border-2 border-pink-100 hover:border-pink-200 transition-all duration-300 card-hover overflow-hidden">
-                <div class="p-6">
+                <div class="p-6" id="lista-desejos-content">
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center">
                             <div class="p-3 bg-gradient-to-br from-pink-100 to-pink-200 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                                <svg class="w-6 h-6 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <circle cx="12" cy="12" r="9" stroke-width="2" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7v5l3 3" />
+                                <svg class="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l-1 12H6L5 9z"></path>
                                 </svg>
                             </div>
                             <div class="ml-4">
-                                <h3 class="text-lg font-bold text-gray-800 group-hover:text-pink-700 transition-colors duration-300">Lista de desejos (em breve)</h3>
+                                <h3 class="text-lg font-bold text-gray-800 group-hover:text-pink-700 transition-colors duration-300">Lista de Desejos</h3>
                                 <p class="text-sm text-gray-500 flex items-center">
-                                    <span class="inline-flex items-center justify-center w-6 h-6 bg-pink-100 text-pink-600 rounded-full text-xs font-bold mr-2">0</span>
-                                    objetos cadastrados
+                                    <span class="inline-flex items-center justify-center w-6 h-6 bg-pink-100 text-pink-600 rounded-full text-xs font-bold mr-2" data-stat="lista_desejos_total">{{ $estatisticas['lista_desejos']['total'] ?? 0 }}</span>
+                                    itens na lista
                                 </p>
                             </div>
                         </div>
-                        <div class="w-3 h-3 bg-pink-300 rounded-full animate-pulse-gentle opacity-50"></div>
+                        @if(($estatisticas['lista_desejos']['total'] ?? 0) > 0)
+                            <div class="w-3 h-3 bg-pink-400 rounded-full animate-pulse-gentle" id="lista-desejos-indicator"></div>
+                        @else
+                            <div class="w-3 h-3 bg-pink-400 rounded-full animate-pulse-gentle" style="display: none;" id="lista-desejos-indicator"></div>
+                        @endif
                     </div>
-                    <p class="text-gray-600 text-sm mb-6 leading-relaxed">Em breve você poderá criar uma lista com os objetos e experiências que deseja realizar ou conquistar. Fique de olho nas novidades!</p>
+                    <p class="text-gray-600 text-sm mb-6 leading-relaxed">Crie sua lista de desejos com links para compra. Seu parceiro poderá ver e comprar para você!</p>
+                    <div class="mb-3" id="lista-desejos-stats">
+                        <div class="text-xs text-gray-500 mb-1">Status:</div>
+                        <div class="text-sm font-medium text-pink-700">
+                            <span data-stat="lista_desejos_comprados">{{ $estatisticas['lista_desejos']['comprados'] ?? 0 }}</span> comprados •
+                            <span data-stat="lista_desejos_pendentes">{{ $estatisticas['lista_desejos']['pendentes'] ?? 0 }}</span> pendentes
+                        </div>
+                    </div>
                     <div class="flex space-x-3">
-                        <button disabled class="flex-1 bg-pink-50 text-pink-400 px-4 py-3 rounded-xl text-sm font-semibold cursor-not-allowed opacity-50 border-2 border-pink-100">
-                            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
-                            </svg>
-                            Ver Lista
+                        <button onclick="toggleListaDesejos()" class="flex-1 bg-pink-50 text-pink-700 px-4 py-3 rounded-xl text-sm font-semibold hover:bg-pink-100 transition-all duration-200 transform hover:scale-105 border-2 border-pink-100 hover:border-pink-200">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                                <span>Ver Lista</span>
+                            </div>
                         </button>
-                        <button disabled class="px-4 py-3 bg-gradient-to-r from-pink-300 to-pink-400 text-white rounded-xl text-sm font-semibold cursor-not-allowed opacity-50 shadow-lg">
+                        @if(empty($somenteLeitura))
+                        <button onclick="openListaDesejoModal()" class="px-4 py-3 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-xl text-sm font-semibold hover:from-pink-600 hover:to-pink-700 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
                             <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                             </svg>
                             Adicionar
                         </button>
+                        @endif
                     </div>
                 </div>
             </div>
-            <!-- Card 7: Registro de Sentimentos -->
+            <!-- Card 8: Registro de Sentimentos -->
             <div class="group bg-white rounded-2xl shadow-lg border-2 border-orange-100 hover:border-orange-200 transition-all duration-300 card-hover overflow-hidden">
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-4">
@@ -779,11 +1401,11 @@
                         </div>
                     </div>
                     <div class="flex space-x-3">
-                        <a href="{{ route('historico') }}" class="flex-1 text-center bg-orange-50 text-orange-700 px-4 py-3 rounded-xl text-sm font-semibold hover:bg-orange-100 transition-all duration-200 transform hover:scale-105 border-2 border-orange-100 hover:border-orange-200">
+                        <a href="{{ isset($relacionamento) ? route('historico-parceiro', $relacionamento) : route('historico') }}" class="flex-1 text-center bg-orange-50 text-orange-700 px-4 py-3 rounded-xl text-sm font-semibold hover:bg-orange-100 transition-all duration-200 transform hover:scale-105 border-2 border-orange-100 hover:border-orange-200">
                             <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                             </svg>
-                            Ver Histórico
+                            Ver Histórico{{ isset($relacionamento) ? ' do Parceiro' : '' }}
                         </a>
                         @if(empty($somenteLeitura))
                         <button onclick="openSentimentModal()" class="px-4 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl text-sm font-semibold hover:from-orange-600 hover:to-orange-700 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
@@ -953,6 +1575,244 @@
                 </button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Modal para Lista de Desejos -->
+<div id="listaDesejoModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 items-center justify-center hidden">
+    <div class="bg-white rounded-xl p-6 max-w-lg w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" id="listaDesejoModalContent">
+        <!-- Header do Modal -->
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-bold text-gray-800 flex items-center">
+                <svg class="w-6 h-6 text-pink-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l-1 12H6L5 9z"></path>
+                </svg>
+                Adicionar à Lista de Desejos
+            </h3>
+            <button onclick="closeListaDesejoModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Conteúdo do Modal -->
+        <form id="listaDesejoForm" onsubmit="submitListaDesejoForm(event)">
+            <div class="space-y-4">
+                <!-- Título -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Título <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" name="titulo" id="titulo"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                           placeholder="Ex: iPhone 15, Viagem para Paris, etc." required>
+                </div>
+
+                <!-- Descrição -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
+                    <textarea name="descricao"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 resize-none"
+                              rows="3"
+                              placeholder="Descreva mais detalhes sobre o item..."></textarea>
+                </div>
+
+                <!-- Link de Compra -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Link de Compra</label>
+                    <input type="url" name="link_compra"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                           placeholder="https://example.com/produto">
+                    <p class="text-xs text-gray-500 mt-1">Link para onde comprar o item (opcional)</p>
+                </div>
+
+                <!-- Grid para Preço e Prioridade -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Preço Estimado -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Preço Estimado</label>
+                        <input type="number" name="preco_estimado" step="0.01" min="0"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                               placeholder="0.00">
+                    </div>
+
+                    <!-- Prioridade -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Prioridade <span class="text-red-500">*</span>
+                        </label>
+                        <select name="prioridade"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                                required>
+                            <option value="baixa">💡 Baixa</option>
+                            <option value="media" selected>⚡ Média</option>
+                            <option value="alta">🔥 Alta</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botões -->
+            <div class="flex space-x-3 mt-6">
+                <button type="button" onclick="closeListaDesejoModal()"
+                        class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                    Cancelar
+                </button>
+                <button type="submit"
+                        class="flex-1 px-4 py-2 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-lg hover:from-pink-600 hover:to-pink-700 transition-all duration-200 transform hover:scale-105 shadow-lg">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Adicionar à Lista
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para Confirmar Compra -->
+<div id="comprarModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 items-center justify-center hidden">
+    <div class="bg-white rounded-xl p-6 max-w-lg w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" id="comprarModalContent">
+        <!-- Header do Modal -->
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-bold text-gray-800 flex items-center">
+                <svg class="w-6 h-6 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Confirmar Compra
+            </h3>
+            <button onclick="closeComprarModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Conteúdo do Modal -->
+        <form id="comprarForm">
+            <div class="mb-6">
+                <p class="text-gray-600 mb-4">Tem certeza que deseja marcar este item como comprado?</p>
+
+                <!-- Observações -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Observações sobre a compra (opcional)</label>
+                    <textarea id="observacoes" name="observacoes"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none"
+                              rows="3"
+                              placeholder="Ex: Comprei em promoção, chegará na terça-feira, etc."></textarea>
+                </div>
+            </div>
+
+            <!-- Botões -->
+            <div class="flex space-x-3">
+                <button type="button" onclick="closeComprarModal()"
+                        class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                    Cancelar
+                </button>
+                <button type="button" onclick="confirmarCompra()" id="confirmarCompraBtn"
+                        class="flex-1 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 transform hover:scale-105 shadow-lg">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Confirmar Compra
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para Confirmar Remoção -->
+<div id="removerModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 items-center justify-center hidden">
+    <div class="bg-white rounded-xl p-6 max-w-lg w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" id="removerModalContent">
+        <!-- Header do Modal -->
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-bold text-gray-800 flex items-center">
+                <svg class="w-6 h-6 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+                Remover Item
+            </h3>
+            <button onclick="closeRemoverModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Conteúdo do Modal -->
+        <div class="mb-6">
+            <div class="flex items-center p-4 bg-red-50 rounded-lg mb-4">
+                <svg class="w-8 h-8 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+                <div>
+                    <h4 class="font-semibold text-red-800">Atenção!</h4>
+                    <p class="text-red-700 text-sm">Esta ação não pode ser desfeita.</p>
+                </div>
+            </div>
+            <p class="text-gray-600">Tem certeza que deseja remover este item da sua lista de desejos?</p>
+        </div>
+
+        <!-- Botões -->
+        <div class="flex space-x-3">
+            <button type="button" onclick="closeRemoverModal()"
+                    class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                Cancelar
+            </button>
+            <button type="button" onclick="confirmarRemocao()" id="confirmarRemocaoBtn"
+                    class="flex-1 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-200 transform hover:scale-105 shadow-lg">
+                <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+                Sim, Remover
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Ver Observações -->
+<div id="observacoesModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 items-center justify-center hidden">
+    <div class="bg-white rounded-xl p-6 max-w-lg w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" id="observacoesModalContent">
+        <!-- Header do Modal -->
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-bold text-gray-800 flex items-center">
+                <svg class="w-6 h-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                </svg>
+                Observações da Compra
+            </h3>
+            <button onclick="closeObservacoesModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Conteúdo do Modal -->
+        <div class="space-y-4">
+            <!-- Item Info -->
+            <div class="bg-gray-50 rounded-lg p-4">
+                <h4 class="font-semibold text-gray-800 mb-1" id="observacoesTitulo">Título do Item</h4>
+                <p class="text-sm text-gray-600">Comprado por: <span class="font-medium" id="observacoesComprador">Nome do Comprador</span></p>
+            </div>
+
+            <!-- Observações -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Observações:</label>
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p class="text-gray-700" id="observacoesTexto">Texto das observações aparecerá aqui</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botão -->
+        <div class="mt-6">
+            <button type="button" onclick="closeObservacoesModal()"
+                    class="w-full px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:scale-105 shadow-lg">
+                Fechar
+            </button>
+        </div>
     </div>
 </div>
 

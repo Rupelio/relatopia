@@ -33,31 +33,39 @@
         }
     </script>
     @php
-    $emojis = [
-        'feliz' => '😊',
-        'triste' => '😢',
-        'ansioso' => '😰',
-        'calmo' => '😌',
-        'raiva' => '😠',
-        'empolgado' => '🤩',
-        'frustrado' => '😤',
-        'amoroso' => '🥰',
-        'preocupado' => '😟',
-        'grato' => '🙏'
-    ];
+        $emojis = [
+            'feliz' => '😊',
+            'triste' => '😢',
+            'ansioso' => '😰',
+            'calmo' => '😌',
+            'raiva' => '😠',
+            'empolgado' => '🤩',
+            'frustrado' => '😤',
+            'amoroso' => '🥰',
+            'preocupado' => '😟',
+            'grato' => '🙏',
+            'entediado' => '😐',
+            'cansado' => '😴',
+            'estressado' => '😣',
+            'confiante' => '😎'
+        ];
 
-    $cores = [
-        'feliz' => 'green',
-        'triste' => 'blue',
-        'ansioso' => 'yellow',
-        'calmo' => 'cyan',
-        'raiva' => 'red',
-        'empolgado' => 'purple',
-        'frustrado' => 'orange',
-        'amoroso' => 'pink',
-        'preocupado' => 'gray',
-        'grato' => 'emerald'
-    ];
+        $cores = [
+            'feliz' => 'green',
+            'triste' => 'blue',
+            'ansioso' => 'yellow',
+            'calmo' => 'cyan',
+            'raiva' => 'red',
+            'empolgado' => 'purple',
+            'frustrado' => 'orange',
+            'amoroso' => 'pink',
+            'preocupado' => 'gray',
+            'grato' => 'emerald',
+            'entediado' => 'slate',
+            'cansado' => 'zinc',
+            'estressado' => 'amber',
+            'confiante' => 'lime'
+        ];
     @endphp
     <div class="min-h-[calc(100vh-4rem)] py-8 px-4">
         <div class="max-w-6xl mx-auto">

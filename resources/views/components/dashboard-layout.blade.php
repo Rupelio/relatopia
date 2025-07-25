@@ -312,6 +312,10 @@
                         <option value="amoroso">🥰 Amoroso</option>
                         <option value="preocupado">😟 Preocupado</option>
                         <option value="grato">🙏 Grato</option>
+                        <option value="entediado">😐 Entediado</option>
+                        <option value="cansado">😴 Cansado</option>
+                        <option value="estressado">😣 Estressado</option>
+                        <option value="confiante">😎 Confiante</option>
                     </select>
                 </div>
 

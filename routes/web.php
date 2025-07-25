@@ -11,6 +11,7 @@ use App\Http\Controllers\RelacionamentoController;
 use App\Http\Controllers\RelacionamentoItemController;
 use App\Http\Controllers\SentimentoController;
 use App\Http\Controllers\VerificacaoEmailController;
+use App\Http\Controllers\ListaDesejoController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -80,10 +81,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/vincular-coparticipante', [PerfilUsuarioController::class, 'vincularCoparticipante']);
         Route::post('/finalizar-onboarding', [PerfilUsuarioController::class, 'finalizarOnboarding']);
 
-        // Logout
-        Route::post('/logout', function () {
-            Auth::logout();
-            return redirect('/login')->with('success', 'Logout realizado com sucesso!');
-        })->name('logout');
+        // Rotas da Lista de Desejos
+        Route::get('/lista-desejos/estatisticas', [ListaDesejoController::class, 'estatisticas']);
+        Route::get('/lista-desejos', [ListaDesejoController::class, 'index']);
+        Route::post('/lista-desejos', [ListaDesejoController::class, 'store']);
+        Route::delete('/lista-desejos/{item}', [ListaDesejoController::class, 'destroy']);
+        Route::put('/lista-desejos/{item}/comprar', [ListaDesejoController::class, 'marcarComoComprado']);
+
+        // Rotas da Lista de Desejos do Parceiro
+        Route::get('/parceiro/{relacionamento}/lista-desejos/estatisticas', [ListaDesejoController::class, 'estatisticasParceiro']);
+        Route::get('/parceiro/{relacionamento}/lista-desejos', [ListaDesejoController::class, 'indexParceiro']);
     });
 });
