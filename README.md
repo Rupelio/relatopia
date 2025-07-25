@@ -12,7 +12,7 @@
 [![MySQL](https://img.shields.io/badge/MySQL-8.0+-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://mysql.com)
 
 [🌟 Demo](#demo) • [🚀 Funcionalidades](#funcionalidades) • [💻 Instalação](#instalação) • [📱 Screenshots](#screenshots) • [🤝 Contribuindo](#contribuindo)
-
+- 🌐 Acesse o site em: [Relatopia](relatopia.laravel.cloud)
 </div>
 
 ---
