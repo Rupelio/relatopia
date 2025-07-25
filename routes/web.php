@@ -10,6 +10,7 @@ use App\Http\Controllers\RedefinirSenhaController;
 use App\Http\Controllers\RelacionamentoController;
 use App\Http\Controllers\RelacionamentoItemController;
 use App\Http\Controllers\SentimentoController;
+use App\Http\Controllers\VerificacaoEmailController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -23,7 +24,14 @@ Route::post('/esqueci-senha', [RedefinirSenhaController::class, 'enviarLinkRedef
 Route::get('/redefinir-senha/{token}', [RedefinirSenhaController::class, 'mostrarFormularioRedefinicao'])->name('password.reset');
 Route::post('/redefinir-senha', [RedefinirSenhaController::class, 'redefinirSenha'])->name('password.update');
 
+// Rotas para verificação de email (requer autenticação mas não verificação)
 Route::middleware('auth')->group(function () {
+    Route::get('/email/verify', [VerificacaoEmailController::class, 'mostrarVerificacaoPendente'])->name('verification.notice');
+    Route::post('/email/verification-notification', [VerificacaoEmailController::class, 'enviarVerificacao'])->name('verification.send');
+    Route::get('/email/verify/{id}/{hash}', [VerificacaoEmailController::class, 'verificarEmail'])->middleware('signed')->name('verification.verify');
+});
+
+Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard
     Route::get('/dashboard', InterfaceUsuarioController::class)->name('dashboard');
     Route::get('/perfil', [PerfilUsuarioController::class, 'index'])->name('perfil');
@@ -67,5 +75,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/sentimento/{id}', [SentimentoController::class, 'show']);
         Route::get('/estatisticasSentimento', [SentimentoController::class, 'estatisticasSentimento']);
         Route::post('/vincular-coparticipante', [PerfilUsuarioController::class, 'vincularCoparticipante']);
+
+        // Logout
+        Route::post('/logout', function () {
+            Auth::logout();
+            return redirect('/login')->with('success', 'Logout realizado com sucesso!');
+        })->name('logout');
     });
 });

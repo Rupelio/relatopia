@@ -3,7 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Usuario;
+use App\Mail\VerificarEmailMail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
+use Carbon\Carbon;
 
 class CadastroController extends Controller
 {
@@ -31,13 +37,34 @@ class CadastroController extends Controller
                 'password.confirmed' => 'As senhas não coincidem.',
             ]);
 
-            Usuario::create([
+            $user = Usuario::create([
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => $request->password
             ]);
 
-            return redirect('/login')->with('success', 'Conta criada com sucesso!');
+            // Faz login automático do usuário
+            Auth::login($user);
+
+            // Gera URL de verificação de email
+            $verificationUrl = URL::temporarySignedRoute(
+                'verification.verify',
+                Carbon::now()->addMinutes(60),
+                [
+                    'id' => $user->id,
+                    'hash' => sha1($user->email)
+                ]
+            );
+
+            // Envia email de verificação
+            try {
+                Mail::to($user->email)->send(new VerificarEmailMail($user, $verificationUrl));
+            } catch (\Exception $e) {
+                // Se falhar o envio do email, continua mesmo assim
+                Log::error('Erro ao enviar email de verificação: ' . $e->getMessage());
+            }
+
+            return redirect()->route('verification.notice')->with('success', 'Conta criada com sucesso! Verifique seu email para continuar.');
         }
     }
 }

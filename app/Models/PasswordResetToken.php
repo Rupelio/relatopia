@@ -16,7 +16,7 @@ class PasswordResetToken extends Model
     ];
 
     public $timestamps = false;
-    
+
     // Tabela padrão do Laravel para reset de senha não tem ID auto-incremento
     protected $primaryKey = null;
     public $incrementing = false;
