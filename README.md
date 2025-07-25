@@ -342,7 +342,8 @@ Encontrou algum problema ou tem alguma sugestão?
 
 - 🐛 [Reporte um bug](https://github.com/Rupelio/relatopia/issues)
 - 💡 [Sugira uma funcionalidade](https://github.com/Rupelio/relatopia/issues)
-- 📧 Entre em contato: [seu-email@exemplo.com](mailto:seu-email@exemplo.com)
+- 📧 Entre em contato: [rupeliojunior445@gmail.com](mailto:rupeliojunior445@gmail.com)
+- 🌐 Acesse o site em: [Relatopia](relatopia.laravel.cloud)
 
 ---
 
