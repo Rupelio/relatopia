@@ -2,6 +2,15 @@
     <script>
         let currentCategory = '';
         const somenteLeitura = @json(!empty($somenteLeitura));
+        const relacionamentoId = @json(isset($relacionamento) ? $relacionamento->id : null);
+        const isDashboardParceiro = relacionamentoId !== null;
+
+        // URLs das APIs baseadas no contexto
+        const apiUrls = {
+            itens: isDashboardParceiro ? `/api/parceiro/${relacionamentoId}/relacionamento-itens` : '/api/relacionamento-itens',
+            estatisticas: isDashboardParceiro ? `/api/parceiro/${relacionamentoId}/estatisticas` : '/api/estatisticas'
+        };
+
         function openSentimentModal(){
             const modalSentiment = document.getElementById('sentimentModal');
             const sentimentContent = document.getElementById('sentimentModalContent');
@@ -121,7 +130,7 @@
                 target.textContent = 'Ver Lista';
             } else {
                 try{
-                    const response = await fetch(`/api/relacionamento-itens?categoria=${category}`);
+                    const response = await fetch(apiUrls.itens + `?categoria=${category}`);
                     const items = await response.json();
 
                     if (items.length > 0) {
@@ -202,6 +211,10 @@
         }
 
         async function toggleItem(itemId, btn) {
+            if (somenteLeitura) {
+                showNotification('Você não pode alterar os dados do parceiro.', 'warning');
+                return;
+            }
             try {
                 const response = await fetch(`/api/relacionamento-itens/${itemId}/toggle`, {
                     method: 'PUT',
@@ -231,6 +244,10 @@
         }
         // Função para remover item da lista
         async function removeItem(itemId) {
+            if (somenteLeitura) {
+                showNotification('Você não pode alterar os dados do parceiro.', 'warning');
+                return;
+            }
             if (confirm('Tem certeza que deseja remover este item?')) {
                 try {
                     const response = await fetch(`/api/relacionamento-itens/${itemId}`, {
@@ -294,7 +311,7 @@
         }
         async function atualizarEstatisticas() {
             try {
-                const response = await fetch('/api/estatisticas');
+                const response = await fetch(apiUrls.estatisticas);
                 if (response.ok) {
                     const stats = await response.json();
                     // Atualize os elementos na tela conforme os dados retornados
@@ -311,6 +328,74 @@
                 }
             } catch (error) {
                 console.error('Erro ao atualizar estatísticas:', error);
+            }
+        }
+
+        // Função para mostrar todos os itens de uma categoria
+        async function showAllItems(category) {
+            try {
+                const response = await fetch(apiUrls.itens + `?categoria=${category}`);
+                const items = await response.json();
+
+                // Encontrar o card correto
+                const cardButton = document.querySelector(`button[onclick="toggleCardList('${category}')"]`);
+                const cardElement = cardButton.closest('.bg-white');
+                let listElement = cardElement.querySelector('.card-list');
+
+                if (listElement && items.length > 0) {
+                    // Recriar a lista com todos os itens
+                    let listHTML = '<ul class="space-y-2">';
+                    items.forEach(item => {
+                        const statusClass = item.resolvido ? 'bg-green-50 text-green-700' : 'bg-gray-50 text-gray-700';
+                        const statusIcon = item.resolvido ? '✅' : '⏳';
+                        const toggleIcon = item.resolvido
+                            ? `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+                            </svg>`
+                            : `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>`;
+
+                        const toggleTitle = item.resolvido ? 'Marcar como pendente' : 'Marcar como resolvido';
+                        const toggleButtonColor = item.resolvido ? 'text-orange-500 hover:text-orange-700' : 'text-blue-500 hover:text-blue-700';
+
+                        listHTML += `
+                            <li class="flex items-center justify-between text-sm ${statusClass} px-3 py-2 rounded-lg">
+                                <div class="flex items-center space-x-2">
+                                    <span>${statusIcon}</span>
+                                    <span>${item.descricao}</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    ${!somenteLeitura ? `
+                                        <button onclick="toggleItem(${item.id}, this)" class="${toggleButtonColor} text-xs" title="${toggleTitle}">
+                                            ${toggleIcon}
+                                        </button>
+                                        <button onclick="removeItem(${item.id})" class="text-red-500 hover:text-red-700 text-xs" title="Remover item">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </li>
+                        `;
+                    });
+                    listHTML += '</ul>';
+
+                    // Adicionar botão para reduzir a lista
+                    listHTML += `
+                        <div class="mt-3 text-center">
+                            <button onclick="toggleCardList('${category}'); setTimeout(() => toggleCardList('${category}'), 100);" class="text-sm text-gray-600 hover:text-gray-700 font-medium">
+                                Mostrar menos
+                            </button>
+                        </div>
+                    `;
+
+                    listElement.innerHTML = listHTML;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar todos os itens:', error);
+                showNotification('Erro ao carregar itens. Tente novamente.', 'error');
             }
         }
     </script>

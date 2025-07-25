@@ -28,6 +28,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard-parceiro/{relacionamento}', [InterfaceUsuarioController::class, 'dashboardParceiro'])->name('dashboard-parceiro');
     Route::get('/historico-parceiro/{relacionamento}', [HistoricoSentimentoController::class, 'historicoParceiro'])->name('historico-parceiro');
 
+    // Rotas para gerenciar convites no perfil
+    Route::post('/aceitar-convite-perfil/{id}', [PerfilUsuarioController::class, 'aceitarConvitePerfil'])->name('aceitar-convite-perfil');
+    Route::post('/recusar-convite-perfil/{id}', [PerfilUsuarioController::class, 'recusarConvitePerfil'])->name('recusar-convite-perfil');
+    Route::delete('/cancelar-convite/{id}', [PerfilUsuarioController::class, 'cancelarConvite'])->name('cancelar-convite');
+
 
     // Logout
     Route::post('/logout', function () {
@@ -42,6 +47,11 @@ Route::middleware('auth')->group(function () {
         Route::put('/relacionamento-itens/{id}/toggle', [RelacionamentoItemController::class, 'toggleResolved']);
         Route::delete('/relacionamento-itens/{id}', [RelacionamentoItemController::class, 'destroy']);
         Route::get('/estatisticas', [RelacionamentoItemController::class, 'estatisticas']);
+
+        // Rotas para dados do parceiro
+        Route::get('/parceiro/{relacionamento}/relacionamento-itens', [RelacionamentoItemController::class, 'indexParceiro']);
+        Route::get('/parceiro/{relacionamento}/estatisticas', [RelacionamentoItemController::class, 'estatisticasParceiro']);
+
         Route::post('/alterar-senha', [PerfilUsuarioController::class, 'alterarSenha']);
         Route::post('/relacionamento', [PerfilUsuarioController::class, 'atualizarRelacionamento']);
         Route::post('/sentimento', [SentimentoController::class, 'store']);

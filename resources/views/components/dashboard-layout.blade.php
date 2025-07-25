@@ -44,9 +44,8 @@
                     </a>
                 </div>
 
-                <!-- Menu de navegação -->
-                <div class="flex items-center space-x-6">
-                    <div class="flex items-center space-x-6">
+                <!-- Menu desktop -->
+                <div class="hidden md:flex items-center space-x-6">
                     <a href="{{ route('dashboard') }}" class="text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-emerald-50">
                         Dashboard
                     </a>
@@ -59,6 +58,10 @@
                             $q->where('user_id_1', $user->id)
                             ->orWhere('user_id_2', $user->id);
                         })->where('status', 'ativo')->first();
+
+                        // Verifica se há convite pendente recebido
+                        $conviteRecebido = \App\Models\Relacionamento::where('user_id_2', $user->id)
+                            ->where('status', 'pendente')->first();
                     @endphp
 
                     @if($relacionamento)
@@ -75,8 +78,13 @@
                             </div>
                         </div>
                     @endif
-                    <a href="{{ route('perfil') }}" class="text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-emerald-50">
+                    <a href="{{ route('perfil') }}" class="relative text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-emerald-50">
                         Perfil
+                        @if($conviteRecebido)
+                            <span class="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full animate-pulse">
+                                !
+                            </span>
+                        @endif
                     </a>
 
                     <!-- Botão Sair com transição verde → vermelho -->
@@ -87,6 +95,54 @@
                         </button>
                     </form>
                 </div>
+
+                <!-- Botão hambúrguer mobile -->
+                <div class="md:hidden">
+                    <button id="mobileMenuBtn" type="button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors duration-200" aria-controls="mobile-menu" aria-expanded="false">
+                        <span class="sr-only">Abrir menu principal</span>
+                        <!-- Ícone hambúrguer -->
+                        <svg id="hamburgerIcon" class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <!-- Ícone X -->
+                        <svg id="closeIcon" class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menu mobile -->
+        <div id="mobileMenu" class="md:hidden hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t border-emerald-100">
+                <a href="{{ route('dashboard') }}" class="text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200">Dashboard</a>
+                <a href="{{ route('historico') }}" class="text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200">Historico</a>
+
+                @if($relacionamento)
+                    <div class="border-t border-gray-200 pt-2 mt-2">
+                        <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Parceiro</div>
+                        <a href="{{ route('dashboard-parceiro', $relacionamento->id) }}" class="text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200">Dashboard do parceiro</a>
+                        <a href="{{ route('historico-parceiro', $relacionamento->id) }}" class="text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200">Histórico do parceiro</a>
+                    </div>
+                @endif
+
+                <a href="{{ route('perfil') }}" class="relative text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200">
+                    Perfil
+                    @if($conviteRecebido)
+                        <span class="absolute top-2 right-3 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full animate-pulse">
+                            !
+                        </span>
+                    @endif
+                </a>
+
+                <div class="border-t border-gray-200 pt-2 mt-2">
+                    <form method="POST" action="{{ route('logout') }}" class="block">
+                        @csrf
+                        <button type="submit" class="w-full text-left bg-emerald-600 hover:bg-red-600 text-white block px-3 py-2 rounded-md text-base font-medium transition-all duration-300">
+                            Sair
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -353,6 +409,55 @@
                 sentimentContent.classList.remove('scale-100', 'opacity-100');
             }, 10);
         }
+
+        // JavaScript para controlar o menu mobile
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const mobileMenu = document.getElementById('mobileMenu');
+            const hamburgerIcon = document.getElementById('hamburgerIcon');
+            const closeIcon = document.getElementById('closeIcon');
+
+            if (mobileMenuBtn && mobileMenu) {
+                mobileMenuBtn.addEventListener('click', function() {
+                    const isHidden = mobileMenu.classList.contains('hidden');
+
+                    if (isHidden) {
+                        // Mostrar menu
+                        mobileMenu.classList.remove('hidden');
+                        hamburgerIcon.classList.add('hidden');
+                        closeIcon.classList.remove('hidden');
+                        mobileMenuBtn.setAttribute('aria-expanded', 'true');
+                    } else {
+                        // Esconder menu
+                        mobileMenu.classList.add('hidden');
+                        hamburgerIcon.classList.remove('hidden');
+                        closeIcon.classList.add('hidden');
+                        mobileMenuBtn.setAttribute('aria-expanded', 'false');
+                    }
+                });
+
+                // Fechar menu ao clicar em um link
+                const mobileLinks = mobileMenu.querySelectorAll('a, button[type="submit"]');
+                mobileLinks.forEach(link => {
+                    link.addEventListener('click', function() {
+                        mobileMenu.classList.add('hidden');
+                        hamburgerIcon.classList.remove('hidden');
+                        closeIcon.classList.add('hidden');
+                        mobileMenuBtn.setAttribute('aria-expanded', 'false');
+                    });
+                });
+
+                // Fechar menu ao redimensionar para desktop
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth >= 768) { // md breakpoint
+                        mobileMenu.classList.add('hidden');
+                        hamburgerIcon.classList.remove('hidden');
+                        closeIcon.classList.add('hidden');
+                        mobileMenuBtn.setAttribute('aria-expanded', 'false');
+                    }
+                });
+            }
+        });
 
     </script>
 </body>

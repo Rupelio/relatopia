@@ -8,18 +8,78 @@
                     <h1 class="text-2xl font-bold text-white">Meu Perfil</h1>
                     <p class="text-emerald-100 mt-1">Gerencie suas informações e configurações</p>
                 </div>
+
+                <!-- Status do Relacionamento -->
                 @if(isset($relacionamento))
-                    <div class="bg-emerald-50 rounded-lg p-4 mb-4">
-                        <span class="font-semibold text-emerald-700">Vinculado com:</span>
-                        {{ $relacionamento->user_id_1 == auth()->id() ? $relacionamento->usuario2->name : $relacionamento->usuario1->name }}
-                        ({{ $relacionamento->user_id_1 == auth()->id() ? $relacionamento->usuario2->email : $relacionamento->usuario1->email }})
-                        <form method="POST" action="{{ route('desfazer-vinculo', $relacionamento->id) }}" class="inline">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="ml-2 text-red-600 hover:underline">Desfazer vínculo</button>
-                        </form>
+                    <!-- Relacionamento Ativo -->
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="inline-flex items-center px-2 py-1 bg-emerald-100 text-emerald-800 text-xs font-medium rounded-full mb-2">
+                                    ✅ Relacionamento Ativo
+                                </span>
+                                <p class="text-emerald-700">
+                                    <span class="font-semibold">Vinculado com:</span>
+                                    {{ $relacionamento->user_id_1 == auth()->id() ? $relacionamento->usuario2->name : $relacionamento->usuario1->name }}
+                                    <span class="text-emerald-600">({{ $relacionamento->user_id_1 == auth()->id() ? $relacionamento->usuario2->email : $relacionamento->usuario1->email }})</span>
+                                </p>
+                            </div>
+                            <form method="POST" action="{{ route('desfazer-vinculo', $relacionamento->id) }}" class="inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-sm font-medium rounded-lg transition-colors duration-200" onclick="return confirm('Tem certeza que deseja desfazer este vínculo?')">
+                                    Desfazer vínculo
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                @elseif(isset($conviteEnviado))
+                    <!-- Convite Enviado Pendente -->
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="inline-flex items-center px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full mb-2">
+                                    ⏳ Convite Pendente
+                                </span>
+                                <p class="text-yellow-700">
+                                    <span class="font-semibold">Convite enviado para:</span>
+                                    {{ $conviteEnviado->usuario2->name }}
+                                    <span class="text-yellow-600">({{ $conviteEnviado->usuario2->email }})</span>
+                                </p>
+                                <p class="text-yellow-600 text-sm mt-1">Aguardando resposta do destinatário</p>
+                            </div>
+                            <button onclick="cancelarConvite({{ $conviteEnviado->id }})" class="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-sm font-medium rounded-lg transition-colors duration-200">
+                                Cancelar convite
+                            </button>
+                        </div>
+                    </div>
+                @elseif(isset($conviteRecebido))
+                    <!-- Convite Recebido -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full mb-2">
+                                    💌 Convite Recebido
+                                </span>
+                                <p class="text-blue-700">
+                                    <span class="font-semibold">{{ $conviteRecebido->usuario1->name }}</span>
+                                    <span class="text-blue-600">({{ $conviteRecebido->usuario1->email }})</span>
+                                    quer formar um relacionamento com você
+                                </p>
+                                <p class="text-blue-600 text-sm mt-1">Você pode aceitar ou recusar este convite</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button onclick="aceitarConvite({{ $conviteRecebido->id }})" class="px-3 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 text-sm font-medium rounded-lg transition-colors duration-200">
+                                    Aceitar
+                                </button>
+                                <button onclick="recusarConvite({{ $conviteRecebido->id }})" class="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-sm font-medium rounded-lg transition-colors duration-200">
+                                    Recusar
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 @endif
+
                 <div class="p-8 space-y-8">
                     <!-- Seção: Segurança da Conta -->
                     <div>
@@ -390,6 +450,76 @@
                 showNotification('Ainda está sendo desenvolvida', 'warning');
                 // Aqui você faria a requisição para excluir a conta
             });
+        }
+
+        // Funções para gerenciar convites
+        async function aceitarConvite(id) {
+            if (!confirm('Tem certeza que deseja aceitar este convite?')) return;
+
+            try {
+                const response = await fetch(`/aceitar-convite-perfil/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    showNotification(data.message, 'success');
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    showNotification(data.message || 'Erro ao aceitar convite', 'error');
+                }
+            } catch (error) {
+                showNotification('Erro ao aceitar convite', 'error');
+            }
+        }
+
+        async function recusarConvite(id) {
+            if (!confirm('Tem certeza que deseja recusar este convite?')) return;
+
+            try {
+                const response = await fetch(`/recusar-convite-perfil/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    showNotification(data.message, 'success');
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    showNotification(data.message || 'Erro ao recusar convite', 'error');
+                }
+            } catch (error) {
+                showNotification('Erro ao recusar convite', 'error');
+            }
+        }
+
+        async function cancelarConvite(id) {
+            if (!confirm('Tem certeza que deseja cancelar este convite?')) return;
+
+            try {
+                const response = await fetch(`/cancelar-convite/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    showNotification(data.message, 'success');
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    showNotification(data.message || 'Erro ao cancelar convite', 'error');
+                }
+            } catch (error) {
+                showNotification('Erro ao cancelar convite', 'error');
+            }
         }
     </script>
 </x-dashboard-layout>
