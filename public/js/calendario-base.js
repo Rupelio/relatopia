@@ -219,7 +219,9 @@ function renderizarEstrutura() {
                             <div id="notificacaoTempo">
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Notificar</label>
                                 <select id="eventoNotificarMinutos" name="notificar_minutos_antes"
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 text-base touch-manipulation">
+                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 text-base touch-manipulation">
+                                    <option value="5">5 minutos antes</option>
+                                    <option value="10">10 minutos antes</option>
                                     <option value="15">15 minutos antes</option>
                                     <option value="30">30 minutos antes</option>
                                     <option value="60" selected>1 hora antes</option>

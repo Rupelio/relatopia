@@ -22,9 +22,15 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withSchedule(function ($schedule) {
-        // Processar notificações de eventos a cada minuto
-        $schedule->command('eventos:notificar')
+        // Processar queue de jobs a cada minuto (para os jobs agendados)
+        $schedule->command('queue:work --once --timeout=60')
                  ->everyMinute()
+                 ->withoutOverlapping()
+                 ->runInBackground();
+
+        // Backup: verificar eventos que precisam de notificação a cada 5 minutos
+        $schedule->command('eventos:notificar-backup')
+                 ->everyFiveMinutes()
                  ->withoutOverlapping();
     })
     ->withExceptions(function (Exceptions $exceptions) {

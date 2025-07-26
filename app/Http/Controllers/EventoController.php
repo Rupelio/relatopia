@@ -179,9 +179,14 @@ class EventoController extends Controller
 
         $evento = Evento::create($dadosEvento);
 
+        // Agendar notificação por email se solicitado
+        if ($evento->notificar_email && $evento->data_evento->isFuture()) {
+            \App\Jobs\EnviarNotificacaoEventoJob::dispatch($evento);
+        }
+
         return response()->json([
             'success' => true,
-            'message' => 'Evento criado com sucesso!',
+            'message' => 'Evento criado com sucesso!' . ($evento->notificar_email ? ' Notificação agendada.' : ''),
             'evento' => $evento
         ]);
     }
@@ -260,16 +265,25 @@ class EventoController extends Controller
             $dadosEvento['relacionamento_id'] = null;
         }
 
-        // Resetar notificação se mudou a data/hora
+        // Resetar notificação se mudou a data/hora e reagendar se necessário
+        $dataOriginal = $evento->data_evento;
+        $dataModificada = false;
+
         if ($request->has('data_evento') && $request->data_evento !== $evento->data_evento->format('Y-m-d H:i:s')) {
             $dadosEvento['notificacao_enviada'] = false;
+            $dataModificada = true;
         }
 
         $evento->update($dadosEvento);
 
+        // Se a data foi modificada e quer notificação, reagendar
+        if ($dataModificada && $evento->notificar_email && $evento->data_evento->isFuture()) {
+            \App\Jobs\EnviarNotificacaoEventoJob::dispatch($evento);
+        }
+
         return response()->json([
             'success' => true,
-            'message' => 'Evento atualizado com sucesso!',
+            'message' => 'Evento atualizado com sucesso!' . ($dataModificada && $evento->notificar_email ? ' Notificação reagendada.' : ''),
             'evento' => $evento
         ]);
     }
