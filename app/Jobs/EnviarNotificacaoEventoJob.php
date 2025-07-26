@@ -60,13 +60,30 @@ class EnviarNotificacaoEventoJob implements ShouldQueue
                 return;
             }
 
-            // Enviar o email
-            Mail::to($evento->usuario->email)->send(new NotificacaoEventoMail($evento));
+            // Lista de emails para enviar
+            $emailsParaEnviar = [$evento->usuario->email];
+
+            // Se for evento compartilhado, adicionar email do parceiro
+            if ($evento->tipo === 'compartilhado' && $evento->relacionamento) {
+                $parceiro = $evento->relacionamento->user_id_1 === $evento->usuario_id
+                    ? $evento->relacionamento->usuario2
+                    : $evento->relacionamento->usuario1;
+
+                if ($parceiro && $parceiro->email !== $evento->usuario->email) {
+                    $emailsParaEnviar[] = $parceiro->email;
+                }
+            }
+
+            // Enviar o email para todos os destinatários
+            foreach ($emailsParaEnviar as $email) {
+                Mail::to($email)->send(new NotificacaoEventoMail($evento));
+                Log::info("✅ Notificação enviada: {$evento->titulo} → {$email}");
+            }
 
             // Marcar como enviada
             $evento->update(['notificacao_enviada' => true]);
 
-            Log::info("✅ Notificação enviada com sucesso para evento: {$evento->titulo} - Email: {$evento->usuario->email}");
+            Log::info("✅ Notificação enviada com sucesso para evento: {$evento->titulo} - Emails: " . implode(', ', $emailsParaEnviar));
 
         } catch (\Exception $e) {
             Log::error("❌ Erro ao enviar notificação do evento {$this->evento->id}: " . $e->getMessage());

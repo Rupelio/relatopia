@@ -37,13 +37,28 @@ class NotificarEventosBackup extends Command
 
         foreach ($eventos as $evento) {
             try {
-                // Enviar email diretamente
-                Mail::to($evento->usuario->email)->send(new NotificacaoEventoMail($evento));
+                // Lista de emails para enviar
+                $emailsParaEnviar = [$evento->usuario->email];
+
+                // Se for evento compartilhado, adicionar email do parceiro
+                if ($evento->tipo === 'compartilhado' && $evento->relacionamento) {
+                    $parceiro = $evento->relacionamento->user_id_1 === $evento->usuario_id
+                        ? $evento->relacionamento->usuario2
+                        : $evento->relacionamento->usuario1;
+
+                    if ($parceiro && $parceiro->email !== $evento->usuario->email) {
+                        $emailsParaEnviar[] = $parceiro->email;
+                    }
+                }
+
+                // Enviar email para todos os destinatários
+                foreach ($emailsParaEnviar as $email) {
+                    Mail::to($email)->send(new NotificacaoEventoMail($evento));
+                    $this->line("✅ [BACKUP] Email enviado: {$evento->titulo} → {$email}");
+                }
 
                 // Marcar como enviada
                 $evento->marcarNotificacaoEnviada();
-
-                $this->line("✅ [BACKUP] Email enviado: {$evento->titulo} → {$evento->usuario->email}");
                 $sucessos++;
 
             } catch (\Exception $e) {
