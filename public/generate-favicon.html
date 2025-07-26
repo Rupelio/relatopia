@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Favicon Generator</title>
+</head>
+<body>
+    <canvas id="canvas" width="32" height="32" style="border: 1px solid #ccc;"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Fundo transparente
+        ctx.clearRect(0, 0, 32, 32);
+
+        // Bonequinho da esquerda (rosa)
+        ctx.fillStyle = '#ec4899';
+        ctx.beginPath();
+        ctx.arc(10, 8, 3, 0, 2 * Math.PI);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.ellipse(10, 18, 4, 6, 0, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // Bonequinho da direita (azul)
+        ctx.fillStyle = '#3b82f6';
+        ctx.beginPath();
+        ctx.arc(22, 8, 3, 0, 2 * Math.PI);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.ellipse(22, 18, 4, 6, 0, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // Coração conectando
+        ctx.fillStyle = '#10b981';
+        ctx.beginPath();
+        ctx.moveTo(16, 14);
+        ctx.bezierCurveTo(14, 12, 12, 12, 12, 14.5);
+        ctx.bezierCurveTo(12, 16, 16, 18, 16, 18);
+        ctx.bezierCurveTo(16, 18, 20, 16, 20, 14.5);
+        ctx.bezierCurveTo(20, 12, 18, 12, 16, 14);
+        ctx.fill();
+
+        // Braços se tocando
+        ctx.fillStyle = '#6b7280';
+        ctx.beginPath();
+        ctx.ellipse(16, 12, 1, 2, 0, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // Converter para data URL e mostrar
+        const dataURL = canvas.toDataURL('image/png');
+        console.log('Favicon criado! Use este código na sua página:');
+        console.log('<link rel="icon" type="image/png" href="data:' + dataURL.split(',')[1] + '">');
+    </script>
+</body>
+</html>

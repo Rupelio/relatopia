@@ -7,6 +7,11 @@
     <meta name="google-adsense-account" content="ca-pub-3613355728057212">
     <title>{{ $title ?? 'Dashboard' }} - Relatopia</title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon-icon.svg">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="shortcut icon" href="/favicon.ico">
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
