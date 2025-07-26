@@ -1514,7 +1514,7 @@
             </div>
 
             <!-- Card 3: Meus Desejos -->
-            <div class="group bg-white rounded-2xl shadow-lg border-2 border-blue-100 hover:border-blue-200 transition-all duration-300 card-hover overflow-hidden">
+            <div data-tour="lista-desejos" class="group bg-white rounded-2xl shadow-lg border-2 border-blue-100 hover:border-blue-200 transition-all duration-300 card-hover overflow-hidden">
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center">
@@ -1598,7 +1598,7 @@
             </div>
 
             <!-- Card 5: Melhorar em Mim -->
-            <div class="group bg-white rounded-2xl shadow-lg border-2 border-yellow-100 hover:border-yellow-200 transition-all duration-300 card-hover overflow-hidden">
+            <div data-tour="melhorias" class="group bg-white rounded-2xl shadow-lg border-2 border-yellow-100 hover:border-yellow-200 transition-all duration-300 card-hover overflow-hidden">
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center">
@@ -1734,7 +1734,7 @@
                 </div>
             </div>
             <!-- Card 8: Registro de Sentimentos -->
-            <div class="group bg-white rounded-2xl shadow-lg border-2 border-orange-100 hover:border-orange-200 transition-all duration-300 card-hover overflow-hidden">
+            <div data-tour="sentimentos" class="group bg-white rounded-2xl shadow-lg border-2 border-orange-100 hover:border-orange-200 transition-all duration-300 card-hover overflow-hidden">
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center">

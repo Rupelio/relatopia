@@ -15,6 +15,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3613355728057212"
      crossorigin="anonymous"></script>
+
+    <!-- Shepherd.js Tour Guide -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shepherd.js@11.2.0/dist/css/shepherd.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/shepherd.js@11.2.0/dist/js/shepherd.min.js"></script>
+
+    <!-- Tour Guide System -->
+    <script src="{{ asset('js/tour-guide.js') }}" defer></script>
     <style>
         .slider-orange::-webkit-slider-thumb {
             appearance: none;
@@ -102,6 +109,100 @@
         .input-focus {
             @apply transition-all duration-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:scale-[1.02];
         }
+
+        /* Tour Guide Customization */
+        .shepherd-element {
+            z-index: 9999 !important;
+        }
+
+        .shepherd-modal-overlay-container {
+            z-index: 9998 !important;
+        }
+
+        .shepherd-header {
+            background: linear-gradient(135deg, #059669 0%, #0d9488 100%) !important;
+            border-radius: 12px 12px 0 0 !important;
+            padding: 16px 20px !important;
+        }
+
+        .shepherd-title {
+            color: white !important;
+            font-weight: 600 !important;
+            font-size: 16px !important;
+            margin: 0 !important;
+        }
+
+        .shepherd-text {
+            padding: 20px !important;
+            font-size: 14px !important;
+            line-height: 1.6 !important;
+            color: #374151 !important;
+        }
+
+        .shepherd-content {
+            border-radius: 12px !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+            border: 2px solid #d1fae5 !important;
+            max-width: 400px !important;
+        }
+
+        .shepherd-footer {
+            padding: 16px 20px !important;
+            background: #f9fafb !important;
+            border-radius: 0 0 12px 12px !important;
+            border-top: 1px solid #e5e7eb !important;
+        }
+
+        .shepherd-button {
+            background: #059669 !important;
+            color: white !important;
+            border: none !important;
+            padding: 8px 16px !important;
+            border-radius: 8px !important;
+            font-weight: 500 !important;
+            transition: all 0.2s !important;
+            margin-left: 8px !important;
+        }
+
+        .shepherd-button:hover {
+            background: #047857 !important;
+            transform: translateY(-1px) !important;
+        }
+
+        .shepherd-button.shepherd-button-secondary {
+            background: #6b7280 !important;
+        }
+
+        .shepherd-button.shepherd-button-secondary:hover {
+            background: #4b5563 !important;
+        }
+
+        .shepherd-element.shepherd-pinned-top .shepherd-content:before {
+            border-bottom-color: #d1fae5 !important;
+        }
+
+        .shepherd-element.shepherd-pinned-bottom .shepherd-content:before {
+            border-top-color: #d1fae5 !important;
+        }
+
+        .shepherd-element.shepherd-pinned-left .shepherd-content:before {
+            border-right-color: #d1fae5 !important;
+        }
+
+        .shepherd-element.shepherd-pinned-right .shepherd-content:before {
+            border-left-color: #d1fae5 !important;
+        }
+
+        /* Tour highlight animation */
+        @keyframes tour-highlight {
+            0%, 100% { box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.3); }
+            50% { box-shadow: 0 0 0 8px rgba(5, 150, 105, 0.5); }
+        }
+
+        .tour-highlight {
+            animation: tour-highlight 2s infinite;
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -186,6 +287,14 @@
                         @endif
                     </a>
 
+                    <!-- Botão Tour Guiado -->
+                    <button onclick="startGuidedTour()" class="text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-emerald-50 flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Tour
+                    </button>
+
                     <!-- Botão Sair com transição verde → vermelho -->
                     <form method="POST" action="{{ route('logout') }}" class="inline">
                         @csrf
@@ -244,6 +353,14 @@
                         </span>
                     @endif
                 </a>
+
+                <!-- Tour Guiado Mobile -->
+                <button onclick="startGuidedTour()" class="w-full text-left text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Tour Guiado
+                </button>
 
                 <div class="border-t border-gray-200 pt-2 mt-2">
                     <form method="POST" action="{{ route('logout') }}" class="block">
