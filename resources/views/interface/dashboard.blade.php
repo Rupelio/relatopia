@@ -1040,6 +1040,368 @@
                 modal.classList.remove('flex');
             }, 300);
         }
+
+        // ===== FUNÇÕES DO CALENDÁRIO =====
+
+        async function atualizarEventos() {
+            try {
+                const response = await fetch('/api/eventos/estatisticas', {
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const stats = data.estatisticas;
+
+                    const updateElement = (selector, value) => {
+                        const element = document.querySelector(selector);
+                        if (element) {
+                            element.textContent = value;
+                        } else {
+                            console.warn(`⚠️ Elemento não encontrado: ${selector}`);
+                        }
+                    };
+
+                    updateElement('[data-stat="eventos_total"]', stats.total_eventos);
+                    updateElement('[data-stat="eventos_futuros"]', stats.total_eventos_futuros);
+                    updateElement('[data-stat="eventos_pessoais"]', stats.eventos_pessoais);
+                    updateElement('[data-stat="eventos_compartilhados"]', stats.eventos_compartilhados);
+
+                    // Mostrar/ocultar indicador
+                    const indicator = document.getElementById('eventos-indicator');
+                    if (indicator) {
+                        indicator.style.display = stats.total_eventos > 0 ? 'block' : 'none';
+                    }
+                } else {
+                    console.error('❌ Erro na resposta:', response.status, response.statusText);
+                }
+            } catch (error) {
+                console.error('❌ Erro ao atualizar eventos:', error);
+            }
+        }
+
+        function openEventoModal() {
+            const modal = document.getElementById('eventoModal');
+            const content = document.getElementById('eventoModalContent');
+
+            // Definir data mínima como hoje
+            const hoje = new Date().toISOString().split('T')[0];
+            document.getElementById('eventoData').min = hoje;
+
+            // Definir hora atual
+            const agora = new Date();
+            const hora = agora.getHours().toString().padStart(2, '0');
+            const minutos = agora.getMinutes().toString().padStart(2, '0');
+            document.getElementById('eventoHora').value = `${hora}:${minutos}`;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+
+            document.getElementById('eventoTitulo').focus();
+        }
+
+        function closeEventoModal() {
+            const modal = document.getElementById('eventoModal');
+            const content = document.getElementById('eventoModalContent');
+
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.getElementById('eventoForm').reset();
+            }, 300);
+        }
+
+        async function toggleCalendario() {
+            const modal = document.getElementById('calendarioVisualizarModal');
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            // Definir mês atual nos filtros
+            const hoje = new Date();
+            const mesAtual = hoje.getFullYear() + '-' + (hoje.getMonth() + 1).toString().padStart(2, '0');
+            document.getElementById('filtroMes').value = mesAtual;
+
+            await carregarEventos();
+        }
+
+        function closeCalendarioModal() {
+            const modal = document.getElementById('calendarioVisualizarModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        async function carregarEventos() {
+            try {
+                const categoria = document.getElementById('filtroCategoria').value;
+                const mes = document.getElementById('filtroMes').value;
+
+                let url = '/api/eventos';
+                const params = new URLSearchParams();
+
+                if (categoria && categoria !== 'todas') {
+                    params.append('categoria', categoria);
+                }
+                if (mes) {
+                    params.append('mes', mes);
+                }
+
+                if (params.toString()) {
+                    url += '?' + params.toString();
+                }
+
+                const response = await fetch(url, {
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    renderizarEventos(data.eventos);
+                } else {
+                    console.error('Erro ao carregar eventos:', response.status);
+                    document.getElementById('eventos-lista').innerHTML = '<p class="text-gray-500 text-center py-4">Erro ao carregar eventos</p>';
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                document.getElementById('eventos-lista').innerHTML = '<p class="text-gray-500 text-center py-4">Erro de conexão</p>';
+            }
+        }
+
+        function renderizarEventos(eventos) {
+            const container = document.getElementById('eventos-lista');
+
+            if (!eventos || eventos.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <p class="text-gray-500 text-lg mb-2">Nenhum evento encontrado</p>
+                        <p class="text-gray-400">Crie seu primeiro evento clicando em "Adicionar"</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const eventosHtml = eventos.map(evento => {
+                const dataEvento = new Date(evento.data_evento);
+                const agora = new Date();
+                const jaPassou = dataEvento < agora;
+                const diasRestantes = Math.ceil((dataEvento - agora) / (1000 * 60 * 60 * 24));
+
+                const categoriaColors = {
+                    'aniversario': 'pink',
+                    'encontro': 'purple',
+                    'viagem': 'blue',
+                    'comemoração': 'yellow',
+                    'compromisso': 'red',
+                    'outro': 'gray'
+                };
+
+                const cor = categoriaColors[evento.categoria] || 'gray';
+                const dataFormatada = dataEvento.toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+                const horaFormatada = dataEvento.toLocaleTimeString('pt-BR', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                return `
+                    <div class="bg-white border border-emerald-200 rounded-xl p-4 mb-3 hover:shadow-md transition-shadow ${jaPassou ? 'opacity-60' : ''}">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-gray-800 text-lg">${evento.titulo}</h4>
+                                <p class="text-sm text-gray-600 mt-1">${evento.descricao || 'Sem descrição'}</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="px-2 py-1 bg-${cor}-100 text-${cor}-700 rounded-full text-xs font-medium">
+                                    ${evento.categoria}
+                                </span>
+                                <span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-medium">
+                                    ${evento.tipo}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center text-sm text-gray-600">
+                            <div class="flex items-center space-x-4">
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                    ${dataFormatada}
+                                </span>
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    ${horaFormatada}
+                                </span>
+                                ${evento.notificar_email ? `
+                                    <span class="flex items-center text-emerald-600">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 19.5A2.5 2.5 0 016.5 17H20"></path>
+                                        </svg>
+                                        Email
+                                    </span>
+                                ` : ''}
+                            </div>
+
+                            <div class="flex items-center space-x-2">
+                                ${jaPassou ?
+                                    '<span class="text-red-500 text-xs font-medium">Evento passou</span>' :
+                                    `<span class="text-emerald-600 text-xs font-medium">${diasRestantes > 0 ? `${diasRestantes} dias` : 'Hoje'}</span>`
+                                }
+                                ${!somenteLeitura ? `
+                                    <button onclick="editarEvento(${evento.id})" class="text-blue-600 hover:text-blue-700 p-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                    </button>
+                                    <button onclick="removerEvento(${evento.id})" class="text-red-600 hover:text-red-700 p-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = eventosHtml;
+        }
+
+        async function filtrarEventos() {
+            await carregarEventos();
+        }
+
+        function limparFiltros() {
+            document.getElementById('filtroCategoria').value = 'todas';
+            document.getElementById('filtroMes').value = '';
+            filtrarEventos();
+        }
+
+        async function removerEvento(eventoId) {
+            if (!confirm('Tem certeza que deseja remover este evento?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/eventos/${eventoId}`, {
+                    method: 'DELETE',
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+
+                if (response.ok) {
+                    showNotification('Evento removido com sucesso!', 'success');
+                    await carregarEventos();
+                    await atualizarEventos();
+                } else {
+                    const error = await response.json();
+                    showNotification(error.message || 'Erro ao remover evento', 'error');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showNotification('Erro de conexão. Tente novamente.', 'error');
+            }
+        }
+
+        // Manipulador de formulário de evento
+        document.addEventListener('DOMContentLoaded', function() {
+            const eventoForm = document.getElementById('eventoForm');
+            if (eventoForm) {
+                eventoForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+
+                    const formData = new FormData(this);
+                    const data = Object.fromEntries(formData);
+
+                    // Combinar data e hora
+                    data.data_evento = data.data + ' ' + data.hora;
+                    delete data.data;
+                    delete data.hora;
+
+                    // Converter checkbox
+                    data.notificar_email = document.getElementById('eventoNotificar').checked;
+
+                    const submitButton = document.getElementById('criarEventoBtn');
+                    const originalText = submitButton.innerHTML;
+
+                    submitButton.innerHTML = `
+                        <div class="flex items-center gap-2">
+                            <div class="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                            <span>Criando...</span>
+                        </div>
+                    `;
+                    submitButton.disabled = true;
+
+                    try {
+                        const response = await fetch('/api/eventos', {
+                            method: 'POST',
+                            credentials: 'include',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify(data)
+                        });
+
+                        if (response.ok) {
+                            const result = await response.json();
+                            showNotification(result.message || 'Evento criado com sucesso!', 'success');
+                            closeEventoModal();
+                            await atualizarEventos();
+                        } else {
+                            const error = await response.json();
+                            showNotification(error.message || 'Erro ao criar evento', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Erro:', error);
+                        showNotification('Erro de conexão. Tente novamente.', 'error');
+                    } finally {
+                        submitButton.innerHTML = originalText;
+                        submitButton.disabled = false;
+                    }
+                });
+            }
+
+            // Controlar visibilidade do campo de notificação
+            const eventoNotificar = document.getElementById('eventoNotificar');
+            const notificacaoTempo = document.getElementById('notificacaoTempo');
+
+            if (eventoNotificar && notificacaoTempo) {
+                eventoNotificar.addEventListener('change', function() {
+                    notificacaoTempo.style.display = this.checked ? 'block' : 'none';
+                });
+            }
+        });
     </script>
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Header com melhor visual -->

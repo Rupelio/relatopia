@@ -21,6 +21,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'onboarding.completed' => \App\Http\Middleware\OnboardingCompleted::class,
         ]);
     })
+    ->withSchedule(function ($schedule) {
+        // Processar notificações de eventos a cada minuto
+        $schedule->command('eventos:notificar')
+                 ->everyMinute()
+                 ->withoutOverlapping();
+    })
     ->withExceptions(function (Exceptions $exceptions) {
         //
     })->create();

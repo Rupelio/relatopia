@@ -12,6 +12,7 @@ use App\Http\Controllers\RelacionamentoItemController;
 use App\Http\Controllers\SentimentoController;
 use App\Http\Controllers\VerificacaoEmailController;
 use App\Http\Controllers\ListaDesejoController;
+use App\Http\Controllers\EventoController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -38,6 +39,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Dashboard (com middleware para verificar onboarding)
     Route::get('/dashboard', InterfaceUsuarioController::class)->name('dashboard')->middleware('onboarding.completed');
+    Route::get('/calendario', function() {
+        return redirect()->route('calendario.individual');
+    })->name('calendario')->middleware('onboarding.completed');
+    Route::get('/calendario/individual', function() {
+        return view('calendario-individual');
+    })->name('calendario.individual')->middleware('onboarding.completed');
+    Route::get('/calendario/casal', function() {
+        return view('calendario-casal');
+    })->name('calendario.casal')->middleware('onboarding.completed');
     Route::get('/perfil', [PerfilUsuarioController::class, 'index'])->name('perfil')->middleware('onboarding.completed');
     Route::get('/historico', HistoricoSentimentoController::class)->name('historico');
     Route::get('/relacionamento/convite/{token}', [RelacionamentoController::class, 'mostrarConvite']);
@@ -91,5 +101,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Rotas da Lista de Desejos do Parceiro
         Route::get('/parceiro/{relacionamento}/lista-desejos/estatisticas', [ListaDesejoController::class, 'estatisticasParceiro']);
         Route::get('/parceiro/{relacionamento}/lista-desejos', [ListaDesejoController::class, 'indexParceiro']);
+
+        // Rotas do Calendário
+        Route::get('/eventos/estatisticas', [EventoController::class, 'estatisticas']);
+        Route::get('/eventos', [EventoController::class, 'index']);
+        Route::get('/eventos/pessoais', [EventoController::class, 'eventosPessoais']);
+        Route::get('/eventos/compartilhados', [EventoController::class, 'eventosCompartilhados']);
+        Route::post('/eventos', [EventoController::class, 'store']);
+        Route::get('/eventos/{evento}', [EventoController::class, 'show']);
+        Route::put('/eventos/{evento}', [EventoController::class, 'update']);
+        Route::delete('/eventos/{evento}', [EventoController::class, 'destroy']);
     });
 });

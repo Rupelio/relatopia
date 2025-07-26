@@ -105,6 +105,17 @@
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
+    @php
+        $user = auth()->user();
+        $relacionamento = \App\Models\Relacionamento::where(function($q) use ($user) {
+            $q->where('user_id_1', $user->id)
+            ->orWhere('user_id_2', $user->id);
+        })->where('status', 'ativo')->first();
+
+        // Verifica se há convite pendente recebido
+        $conviteRecebido = \App\Models\Relacionamento::where('user_id_2', $user->id)
+            ->where('status', 'pendente')->first();
+    @endphp
     <!-- Navbar para usuários logados -->
     <nav class="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-emerald-100 z-50 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -121,20 +132,36 @@
                     <a href="{{ route('dashboard') }}" class="text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-emerald-50">
                         Dashboard
                     </a>
+
+                    <!-- Dropdown do Calendário -->
+                    <div class="relative group">
+                        <button class="text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-emerald-50 flex items-center">
+                            Calendário
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div class="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                                                        <a href="{{ route('calendario') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 rounded-t-lg">
+                                <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                Meu Calendário
+                            </a>
+                            @if($relacionamento)
+                                <a href="{{ route('calendario.casal') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 rounded-b-lg">
+                                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                    </svg>
+                                    Calendário do Casal
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+
                     <a href="{{ route('historico') }}" class="text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-emerald-50">
                         Historico
                     </a>
-                    @php
-                        $user = auth()->user();
-                        $relacionamento = \App\Models\Relacionamento::where(function($q) use ($user) {
-                            $q->where('user_id_1', $user->id)
-                            ->orWhere('user_id_2', $user->id);
-                        })->where('status', 'ativo')->first();
-
-                        // Verifica se há convite pendente recebido
-                        $conviteRecebido = \App\Models\Relacionamento::where('user_id_2', $user->id)
-                            ->where('status', 'pendente')->first();
-                    @endphp
 
                     @if($relacionamento)
                         <div class="relative group">
@@ -189,6 +216,16 @@
         <div id="mobileMenu" class="md:hidden hidden">
             <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t border-emerald-100">
                 <a href="{{ route('dashboard') }}" class="text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200">Dashboard</a>
+
+                <!-- Seção de Calendário Mobile -->
+                <div class="border-t border-gray-200 pt-2 mt-2">
+                    <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Calendário</div>
+                    <a href="{{ route('calendario') }}" class="text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200">Meu Calendário</a>
+                    @if($relacionamento)
+                        <a href="{{ route('calendario.casal') }}" class="text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200">Calendário do Casal</a>
+                    @endif
+                </div>
+
                 <a href="{{ route('historico') }}" class="text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200">Historico</a>
 
                 @if($relacionamento)

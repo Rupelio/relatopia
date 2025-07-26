@@ -6,6 +6,7 @@ use App\Models\Relacionamento;
 use App\Models\RelacionamentoItem;
 use App\Models\Sentimento;
 use App\Models\ListaDesejo;
+use App\Models\Evento;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -29,6 +30,32 @@ class InterfaceUsuarioController extends Controller
             'pendentes' => $user->listaDesejos()->where('comprado', false)->count()
         ];
 
+        // Estatísticas do Calendário
+        $relacionamento = Relacionamento::where(function($query) use ($user) {
+            $query->where('user_id_1', $user->id)
+                  ->orWhere('user_id_2', $user->id);
+        })->where('status', 'aceito')->first();
+
+        $eventosPessoais = Evento::paraUsuario($user->id)->pessoais()->count();
+        $eventosPessoaisFuturos = Evento::paraUsuario($user->id)->pessoais()->futuros()->count();
+
+        $eventosCompartilhados = 0;
+        $eventosCompartilhadosFuturos = 0;
+
+        if ($relacionamento) {
+            $eventosCompartilhados = Evento::compartilhadosDoRelacionamento($relacionamento->id)->count();
+            $eventosCompartilhadosFuturos = Evento::compartilhadosDoRelacionamento($relacionamento->id)->futuros()->count();
+        }
+
+        $eventos = [
+            'eventos_pessoais' => $eventosPessoais,
+            'eventos_pessoais_futuros' => $eventosPessoaisFuturos,
+            'eventos_compartilhados' => $eventosCompartilhados,
+            'eventos_compartilhados_futuros' => $eventosCompartilhadosFuturos,
+            'total_eventos' => $eventosPessoais + $eventosCompartilhados,
+            'total_eventos_futuros' => $eventosPessoaisFuturos + $eventosCompartilhadosFuturos
+        ];
+
         return view('interface.dashboard', [
             'estatisticas' => [
                 'relacionamento' => $estatisticasRelacionamento,
@@ -37,7 +64,8 @@ class InterfaceUsuarioController extends Controller
                     'hoje' => $sentimentoHoje,
                     'ultimo' => $ultimoSentimento
                 ],
-                'lista_desejos' => $listaDesejos
+                'lista_desejos' => $listaDesejos,
+                'eventos' => $eventos
             ]
         ]);
     }

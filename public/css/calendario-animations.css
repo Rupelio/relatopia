@@ -1,0 +1,694 @@
+/* Animações e Micro-interações para o Calendário */
+
+/* Loading e Skeleton */
+.calendario-loading {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: .5;
+    }
+}
+
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Efeitos de hover melhorados */
+.calendario-day:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.calendario-event-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.calendario-event-card:hover {
+    transform: translateY(-1px) scale(1.02);
+    box-shadow: 0 10px 30px rgba(5, 150, 105, 0.15);
+}
+
+/* Animações de modal */
+.modal-backdrop {
+    backdrop-filter: blur(4px);
+    transition: backdrop-filter 0.3s ease;
+}
+
+.modal-content {
+    animation: modalSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalSlideIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.8) translateY(50px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.modal-content.closing {
+    animation: modalSlideOut 0.2s ease-in-out;
+}
+
+@keyframes modalSlideOut {
+    0% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+    }
+}
+
+/* Bounce effect para botões */
+.btn-bounce {
+    transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.btn-bounce:active {
+    transform: scale(0.95);
+}
+
+/* Ripple effect melhorado */
+.ripple {
+    position: relative;
+    overflow: hidden;
+}
+
+.ripple-effect {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.6);
+    transform: scale(0);
+    animation: ripple-animation 0.6s linear;
+    pointer-events: none;
+}
+
+@keyframes ripple-animation {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+/* Melhorar efeitos de keyboard navigation */
+.keyboard-navigation *:focus {
+    outline: 3px solid rgba(5, 150, 105, 0.5);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* Loading states melhorados */
+.loading-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Skeleton loading melhorado */
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 4px;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Improved tooltip effects */
+.tooltip {
+    position: relative;
+}
+
+.tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 1000;
+}
+
+.tooltip::before {
+    content: '';
+    position: absolute;
+    bottom: 115%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: rgba(0, 0, 0, 0.8);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.tooltip:hover::after,
+.tooltip:hover::before {
+    opacity: 1;
+}
+
+/* Melhorar animações de notificação */
+.notification-success {
+    animation: slideInSuccess 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    backdrop-filter: blur(2px);
+}
+
+.notification-error {
+    animation: slideInError 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    backdrop-filter: blur(2px);
+}
+
+@keyframes slideInSuccess {
+    0% {
+        opacity: 0;
+        transform: translateX(100%) scale(0.8) rotateY(90deg);
+    }
+    50% {
+        transform: translateX(0) scale(1.05) rotateY(0deg);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0) scale(1) rotateY(0deg);
+    }
+}
+
+@keyframes slideInError {
+    0% {
+        opacity: 0;
+        transform: translateX(100%) rotateZ(10deg) scale(0.8);
+    }
+    50% {
+        transform: translateX(-10px) rotateZ(-5deg) scale(1.05);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0) rotateZ(0deg) scale(1);
+    }
+}
+
+/* Parallax effect sutil */
+.parallax-bg {
+    background-attachment: fixed;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+/* Glassmorphism effects */
+.glass-effect {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Glow effects para destaque */
+.glow-effect {
+    box-shadow: 0 0 20px rgba(5, 150, 105, 0.3);
+    transition: box-shadow 0.3s ease;
+}
+
+.glow-effect:hover {
+    box-shadow: 0 0 30px rgba(5, 150, 105, 0.5);
+}
+
+/* Typing indicator animation */
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.typing-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #059669;
+    animation: typing 1.4s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typing {
+    0%, 80%, 100% {
+        transform: scale(0);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Smooth reveal animations */
+.reveal-up {
+    animation: revealUp 0.6s ease-out;
+}
+
+.reveal-down {
+    animation: revealDown 0.6s ease-out;
+}
+
+.reveal-left {
+    animation: revealLeft 0.6s ease-out;
+}
+
+.reveal-right {
+    animation: revealRight 0.6s ease-out;
+}
+
+@keyframes revealUp {
+    from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes revealDown {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes revealLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes revealRight {
+    from {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Progressive loading bars */
+.progress-bar {
+    position: relative;
+    overflow: hidden;
+    background: #f3f4f6;
+    border-radius: 8px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #059669, #10b981);
+    border-radius: 8px;
+    transition: width 0.5s ease;
+    position: relative;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
+
+/* Micro animations for interactions */
+.bounce-in {
+    animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+    70% {
+        transform: scale(0.9);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.flip-in {
+    animation: flipIn 0.6s ease-out;
+}
+
+@keyframes flipIn {
+    0% {
+        opacity: 0;
+        transform: rotateY(-90deg);
+    }
+    100% {
+        opacity: 1;
+        transform: rotateY(0);
+    }
+}
+
+/* Enhanced focus states */
+.focus-ring {
+    transition: all 0.2s ease;
+}
+
+.focus-ring:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.4);
+    transform: scale(1.02);
+}
+
+/* Smooth color transitions */
+.color-transition {
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Interactive calendar cells */
+.calendar-cell {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.calendar-cell::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(5, 150, 105, 0.1), rgba(16, 185, 129, 0.1));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: inherit;
+}
+
+.calendar-cell:hover::before {
+    opacity: 1;
+}
+
+.calendar-cell.today::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 8px;
+    height: 8px;
+    background: #059669;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+/* Loading states for different components */
+.loading-calendar {
+    animation: pulse 2s infinite;
+}
+
+.loading-events {
+    animation: fadeInOut 1.5s infinite;
+}
+
+@keyframes fadeInOut {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+}
+
+/* Improved mobile touch feedback */
+@media (max-width: 768px) {
+    .touch-feedback:active {
+        background-color: rgba(5, 150, 105, 0.1);
+        transform: scale(0.98);
+        transition: all 0.1s ease;
+    }
+
+    .mobile-ripple {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .mobile-ripple:active::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(5, 150, 105, 0.3);
+        transform: translate(-50%, -50%);
+        animation: mobileRipple 0.6s ease-out;
+    }
+
+    @keyframes mobileRipple {
+        to {
+            width: 300px;
+            height: 300px;
+            opacity: 0;
+        }
+    }
+}
+
+/* Smooth scrolling */
+.calendario-scroll {
+    scroll-behavior: smooth;
+}
+
+/* Fade in animations */
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Stagger animations para lista de eventos */
+.evento-item {
+    animation: slideInFromLeft 0.4s ease-out;
+}
+
+.evento-item:nth-child(1) { animation-delay: 0.1s; }
+.evento-item:nth-child(2) { animation-delay: 0.2s; }
+.evento-item:nth-child(3) { animation-delay: 0.3s; }
+.evento-item:nth-child(4) { animation-delay: 0.4s; }
+.evento-item:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes slideInFromLeft {
+    0% {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Calendar grid animations */
+.calendar-cell {
+    transition: all 0.2s ease;
+}
+
+/* Success/Error animations */
+.notification-success {
+    animation: slideInSuccess 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.notification-error {
+    animation: slideInError 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes slideInSuccess {
+    0% {
+        opacity: 0;
+        transform: translateX(100%) scale(0.8);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+@keyframes slideInError {
+    0% {
+        opacity: 0;
+        transform: translateX(100%) rotateZ(5deg);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0) rotateZ(0deg);
+    }
+}
+
+/* Mobile touch feedback */
+@media (max-width: 768px) {
+    .touch-feedback {
+        transition: background-color 0.1s ease;
+    }
+
+    .touch-feedback:active {
+        background-color: rgba(5, 150, 105, 0.1);
+    }
+
+    .calendar-cell:active {
+        background-color: rgba(5, 150, 105, 0.15);
+        transform: scale(0.98);
+    }
+}
+
+/* Loading states */
+.loading-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Form field focus animations */
+.form-field {
+    transition: all 0.3s ease;
+}
+
+.form-field:focus {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(5, 150, 105, 0.15);
+}
+
+/* Progress indicators */
+.progress-bar {
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
+
+/* Easter egg hover effects */
+.easter-egg:hover {
+    animation: wiggle 0.5s ease-in-out;
+}
+
+@keyframes wiggle {
+    0%, 7%, 14%, 21%, 28%, 35%, 42%, 49%, 56%, 63%, 70%, 77%, 84%, 91%, 98%, 100% {
+        transform: rotate(0deg);
+    }
+    3.5%, 10.5%, 17.5%, 24.5%, 31.5%, 38.5%, 45.5%, 52.5%, 59.5%, 66.5%, 73.5%, 80.5%, 87.5%, 94.5% {
+        transform: rotate(1deg);
+    }
+}
+
+/* Dark mode smooth transitions */
+.dark-mode-transition * {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Accessibility: Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
