@@ -20,6 +20,20 @@ class Sentimento extends Model
         'horario' => 'datetime',
         'nivel_intensidade' => 'integer'
     ];
+
+    protected $appends = ['usuario_id'];
+
+    // Accessor para compatibilidade com API móvel
+    public function getUsuarioIdAttribute()
+    {
+        return $this->user_id;
+    }
+
+    // Mutator para aceitar usuario_id da API móvel
+    public function setUsuarioIdAttribute($value)
+    {
+        $this->attributes['user_id'] = $value;
+    }
     public function usuario(): BelongsTo{
         return $this->belongsTo(Usuario::class, 'user_id');
     }

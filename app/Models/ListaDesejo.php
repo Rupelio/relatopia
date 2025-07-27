@@ -31,6 +31,41 @@ class ListaDesejo extends Model
         'data_compra' => 'datetime'
     ];
 
+    protected $appends = ['item', 'link', 'preco_real'];
+
+    // Accessors para compatibilidade com API móvel
+    public function getItemAttribute()
+    {
+        return $this->titulo;
+    }
+
+    public function getLinkAttribute()
+    {
+        return $this->link_compra;
+    }
+
+    public function getPrecoRealAttribute()
+    {
+        return $this->comprado ? $this->preco_estimado : null;
+    }
+
+    // Converter prioridade entre string e número para API móvel
+    public function getPrioridadeAttribute($value)
+    {
+        $map = ['baixa' => 1, 'media' => 3, 'alta' => 5];
+        return $map[$value] ?? 3;
+    }
+
+    public function setPrioridadeAttribute($value)
+    {
+        if (is_numeric($value)) {
+            $map = [1 => 'baixa', 2 => 'baixa', 3 => 'media', 4 => 'alta', 5 => 'alta'];
+            $this->attributes['prioridade'] = $map[$value] ?? 'media';
+        } else {
+            $this->attributes['prioridade'] = $value;
+        }
+    }
+
     public function usuario(): BelongsTo
     {
         return $this->belongsTo(Usuario::class);
@@ -43,7 +78,8 @@ class ListaDesejo extends Model
 
     public function getPrioridadeColorAttribute(): string
     {
-        return match($this->prioridade) {
+        $prioridadeOriginal = $this->getOriginal('prioridade');
+        return match($prioridadeOriginal) {
             'alta' => 'red',
             'media' => 'yellow',
             'baixa' => 'green',
@@ -53,7 +89,8 @@ class ListaDesejo extends Model
 
     public function getPrioridadeIconAttribute(): string
     {
-        return match($this->prioridade) {
+        $prioridadeOriginal = $this->getOriginal('prioridade');
+        return match($prioridadeOriginal) {
             'alta' => '🔥',
             'media' => '⚡',
             'baixa' => '💡',
