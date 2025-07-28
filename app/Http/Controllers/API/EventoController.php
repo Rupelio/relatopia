@@ -189,21 +189,21 @@ class EventoController extends Controller
         $usuario = Auth::user();
 
         $validator = Validator::make($request->all(), [
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'titulo' => 'required|string|max:255',
+            'descricao' => 'nullable|string',
             'date' => 'required|date_format:Y-m-d',
             'time' => 'nullable|date_format:H:i',
-            'tipo' => 'required|in:aniversario,encontro,outro',
-            'categoria' => 'required|in:pessoal,compartilhado',
+            'categoria' => 'required|in:aniversario,encontro,viagem,comemoração,compromisso,outro',
+            'tipo' => 'required|in:pessoal,compartilhado',
         ], [
-            'title.required' => 'O título é obrigatório.',
+            'titulo.required' => 'O título é obrigatório.',
             'date.required' => 'A data é obrigatória.',
             'date.date_format' => 'A data deve estar no formato YYYY-MM-DD.',
             'time.date_format' => 'O horário deve estar no formato HH:MM.',
-            'tipo.required' => 'O tipo é obrigatório.',
-            'tipo.in' => 'Tipo inválido.',
             'categoria.required' => 'A categoria é obrigatória.',
             'categoria.in' => 'Categoria inválida.',
+            'tipo.required' => 'O tipo é obrigatório.',
+            'tipo.in' => 'Tipo inválido.',
         ]);
 
         if ($validator->fails()) {
@@ -215,17 +215,17 @@ class EventoController extends Controller
         }
 
         $dadosEvento = [
-            'titulo' => $request->title,
-            'descricao' => $request->description,
+            'titulo' => $request->titulo,
+            'descricao' => $request->descricao,
             'data_evento' => $request->date . ' ' . ($request->time ?? '00:00:00'),
-            'tipo' => $request->tipo,
             'categoria' => $request->categoria,
+            'tipo' => $request->tipo,
             'usuario_id' => $usuario->id,
             'relacionamento_id' => null,
         ];
 
         // Se for evento compartilhado, verificar se tem relacionamento ativo
-        if ($request->categoria === 'compartilhado') {
+        if ($request->tipo === 'compartilhado') {
             $relacionamento = Relacionamento::where(function($query) use ($usuario) {
                 $query->where('user_id_1', $usuario->id)
                       ->orWhere('user_id_2', $usuario->id);

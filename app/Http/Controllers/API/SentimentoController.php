@@ -59,7 +59,7 @@ class SentimentoController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'tipo_sentimento' => 'required|string|in:feliz,triste,ansioso,calmo,irritado,empolgado,preocupado,relaxado,estressado,confiante,inseguro,grato,solitario,apaixonado,nostalgico',
+                'tipo_sentimento' => 'required|string',
                 'nivel_intensidade' => 'required|integer|min:1|max:10',
                 'descricao' => 'nullable|string|max:1000',
                 'horario' => 'nullable|date'
@@ -130,7 +130,7 @@ class SentimentoController extends Controller
                                    ->findOrFail($id);
 
             $validator = Validator::make($request->all(), [
-                'tipo_sentimento' => 'sometimes|required|string|in:feliz,triste,ansioso,calmo,irritado,empolgado,preocupado,relaxado,estressado,confiante,inseguro,grato,solitario,apaixonado,nostalgico',
+                'tipo_sentimento' => 'sometimes|required|string',
                 'nivel_intensidade' => 'sometimes|required|integer|min:1|max:10',
                 'descricao' => 'nullable|string|max:1000',
                 'horario' => 'sometimes|required|date'
