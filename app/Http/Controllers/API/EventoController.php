@@ -106,7 +106,7 @@ class EventoController extends Controller
                 'description' => $evento->descricao,
                 'date' => $evento->data_evento->format('Y-m-d'),
                 'time' => $evento->data_evento->format('H:i'),
-                'tipo' => $this->mapTipoToMobile($evento->categoria),
+                'tipo' => $evento->categoria,
                 'categoria' => $evento->tipo,
                 'relacionamento_id' => $evento->relacionamento_id,
                 'created_at' => $evento->created_at->toISOString(),
@@ -165,7 +165,7 @@ class EventoController extends Controller
                 'description' => $evento->descricao,
                 'date' => $evento->data_evento->format('Y-m-d'),
                 'time' => $evento->data_evento->format('H:i'),
-                'tipo' => $this->mapTipoToMobile($evento->categoria),
+                'tipo' => $evento->categoria,
                 'categoria' => $evento->tipo,
                 'relacionamento_id' => $evento->relacionamento_id,
                 'created_at' => $evento->created_at->toISOString(),
@@ -252,7 +252,7 @@ class EventoController extends Controller
                 'description' => $evento->descricao,
                 'date' => $evento->data_evento->format('Y-m-d'),
                 'time' => $evento->data_evento->format('H:i'),
-                'tipo' => $this->mapTipoToMobile($evento->categoria),
+                'tipo' => $evento->categoria,
                 'categoria' => $evento->tipo,
                 'relacionamento_id' => $evento->relacionamento_id,
                 'created_at' => $evento->created_at->toISOString(),
@@ -462,7 +462,7 @@ class EventoController extends Controller
                 'description' => $proximoEvento->descricao,
                 'date' => $proximoEvento->data_evento->format('Y-m-d'),
                 'time' => $proximoEvento->data_evento->format('H:i'),
-                'tipo' => $this->mapTipoToMobile($proximoEvento->categoria),
+                'tipo' => $proximoEvento->categoria,
                 'categoria' => $proximoEvento->tipo,
                 'relacionamento_id' => $proximoEvento->relacionamento_id,
             ];
@@ -494,23 +494,6 @@ class EventoController extends Controller
         ];
 
         return $map[$tipo] ?? 'outro';
-    }
-
-    /**
-     * Mapear tipo do banco para o mobile
-     */
-    private function mapTipoToMobile($categoria)
-    {
-        $map = [
-            'aniversario' => 'aniversario',
-            'encontro' => 'encontro',
-            'viagem' => 'outro',
-            'comemoração' => 'outro',
-            'compromisso' => 'outro',
-            'outro' => 'outro',
-        ];
-
-        return $map[$categoria] ?? 'outro';
     }
 
     /**
