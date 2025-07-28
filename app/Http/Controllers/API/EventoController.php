@@ -62,8 +62,8 @@ class EventoController extends Controller
                     'description' => $evento->descricao,
                     'date' => $evento->data_evento->format('Y-m-d'),
                     'time' => $evento->data_evento->format('H:i'),
-                    'tipo' => $this->mapTipoToMobile($evento->categoria),
-                    'categoria' => $evento->tipo,
+                    'tipo' => $evento->tipo,
+                    'categoria' => $evento->categoria,
                     'relacionamento_id' => $evento->relacionamento_id,
                     'created_at' => $evento->created_at->toISOString(),
                     'updated_at' => $evento->updated_at->toISOString(),
@@ -218,8 +218,8 @@ class EventoController extends Controller
             'titulo' => $request->title,
             'descricao' => $request->description,
             'data_evento' => $request->date . ' ' . ($request->time ?? '00:00:00'),
-            'categoria' => $this->mapTipoFromMobile($request->tipo),
-            'tipo' => $request->categoria,
+            'tipo' => $request->tipo,
+            'categoria' => $request->categoria,
             'usuario_id' => $usuario->id,
             'relacionamento_id' => null,
         ];
@@ -287,8 +287,8 @@ class EventoController extends Controller
                 'description' => $evento->descricao,
                 'date' => $evento->data_evento->format('Y-m-d'),
                 'time' => $evento->data_evento->format('H:i'),
-                'tipo' => $this->mapTipoToMobile($evento->categoria),
-                'categoria' => $evento->tipo,
+                'tipo' => $evento->tipo,
+                'categoria' => $evento->categoria,
                 'relacionamento_id' => $evento->relacionamento_id,
                 'created_at' => $evento->created_at->toISOString(),
                 'updated_at' => $evento->updated_at->toISOString(),
@@ -351,14 +351,14 @@ class EventoController extends Controller
         }
 
         if ($request->has('tipo')) {
-            $dadosEvento['categoria'] = $this->mapTipoFromMobile($request->tipo);
+            $dadosEvento['tipo'] = $request->tipo;
         }
 
         if ($request->has('categoria')) {
-            $dadosEvento['tipo'] = $request->categoria;
+            $dadosEvento['categoria'] = $request->categoria;
 
             // Se mudou para compartilhado, verificar relacionamento
-            if ($request->categoria === 'compartilhado' && $evento->tipo !== 'compartilhado') {
+            if ($request->categoria === 'compartilhado' && $evento->categoria !== 'compartilhado') {
                 $relacionamento = Relacionamento::where(function($query) use ($usuario) {
                     $query->where('user_id_1', $usuario->id)
                           ->orWhere('user_id_2', $usuario->id);
@@ -388,8 +388,8 @@ class EventoController extends Controller
                 'description' => $evento->descricao,
                 'date' => $evento->data_evento->format('Y-m-d'),
                 'time' => $evento->data_evento->format('H:i'),
-                'tipo' => $this->mapTipoToMobile($evento->categoria),
-                'categoria' => $evento->tipo,
+                'tipo' => $evento->tipo,
+                'categoria' => $evento->categoria,
                 'relacionamento_id' => $evento->relacionamento_id,
                 'created_at' => $evento->created_at->toISOString(),
                 'updated_at' => $evento->updated_at->toISOString(),

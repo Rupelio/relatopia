@@ -22,18 +22,18 @@ class SentimentoController extends Controller
 
             // Filtros opcionais
             if ($request->has('data_inicio')) {
-                $query->where('data_sentimento', '>=', $request->data_inicio);
+                $query->whereDate('horario', '>=', $request->data_inicio);
             }
 
             if ($request->has('data_fim')) {
-                $query->where('data_sentimento', '<=', $request->data_fim);
+                $query->whereDate('horario', '<=', $request->data_fim);
             }
 
-            if ($request->has('emocao')) {
-                $query->where('emocao', $request->emocao);
+            if ($request->has('tipo_sentimento')) {
+                $query->where('tipo_sentimento', $request->tipo_sentimento);
             }
 
-            $sentimentos = $query->orderBy('data_sentimento', 'desc')
+            $sentimentos = $query->orderBy('horario', 'desc')
                                 ->orderBy('created_at', 'desc')
                                 ->get();
 
@@ -61,7 +61,7 @@ class SentimentoController extends Controller
             $validator = Validator::make($request->all(), [
                 'tipo_sentimento' => 'required|string|in:feliz,empolgado,grato,calmo,confiante,amoroso,esperancoso,triste,ansioso,raiva,frustrado,preocupado,sozinho,estressado,confuso,cansado,nostalgico,entediado',
                 'nivel_intensidade' => 'required|integer|min:1|max:10',
-                'descricao' => 'required|string|max:1000',
+                'descricao' => 'nullable|string|max:1000',
                 'horario' => 'nullable|date'
             ]);
 
@@ -130,12 +130,10 @@ class SentimentoController extends Controller
                                    ->findOrFail($id);
 
             $validator = Validator::make($request->all(), [
-                'emocao' => 'sometimes|required|string|max:50',
-                'intensidade' => 'sometimes|required|integer|min:1|max:10',
+                'tipo_sentimento' => 'sometimes|required|string|in:feliz,empolgado,grato,calmo,confiante,amoroso,esperancoso,triste,ansioso,raiva,frustrado,preocupado,sozinho,estressado,confuso,cansado,nostalgico,entediado',
+                'nivel_intensidade' => 'sometimes|required|integer|min:1|max:10',
                 'descricao' => 'nullable|string|max:1000',
-                'data_sentimento' => 'sometimes|required|date',
-                'fatores_externos' => 'nullable|string|max:500',
-                'categoria' => 'nullable|string|max:100'
+                'horario' => 'sometimes|required|date'
             ]);
 
             if ($validator->fails()) {
@@ -147,8 +145,7 @@ class SentimentoController extends Controller
             }
 
             $sentimento->update($request->only([
-                'emocao', 'intensidade', 'descricao', 'data_sentimento',
-                'fatores_externos', 'categoria'
+                'tipo_sentimento', 'nivel_intensidade', 'descricao', 'horario'
             ]));
 
             return response()->json([
@@ -201,14 +198,14 @@ class SentimentoController extends Controller
             $dataInicio = Carbon::now()->subDays($periodo);
 
             $sentimentos = Sentimento::where('user_id', Auth::id())
-                                    ->where('data_sentimento', '>=', $dataInicio)
+                                    ->whereDate('horario', '>=', $dataInicio)
                                     ->get();
 
             $total = $sentimentos->count();
-            $mediaIntensidade = $total > 0 ? round($sentimentos->avg('intensidade'), 1) : 0;
+            $mediaIntensidade = $total > 0 ? round($sentimentos->avg('nivel_intensidade'), 1) : 0;
 
             // Emoções mais frequentes
-            $emocoesMaisFrequentes = $sentimentos->groupBy('emocao')
+            $emocoesMaisFrequentes = $sentimentos->groupBy('tipo_sentimento')
                                                 ->map(function ($grupo) {
                                                     return $grupo->count();
                                                 })
@@ -216,32 +213,25 @@ class SentimentoController extends Controller
                                                 ->take(5);
 
             // Distribuição por intensidade
-            $distribucaoIntensidade = $sentimentos->groupBy('intensidade')
+            $distribucaoIntensidade = $sentimentos->groupBy('nivel_intensidade')
                                                  ->map(function ($grupo) {
                                                      return $grupo->count();
                                                  })
                                                  ->sortKeys();
-
-            // Sentimentos por categoria
-            $sentimentosPorCategoria = $sentimentos->whereNotNull('categoria')
-                                                  ->groupBy('categoria')
-                                                  ->map(function ($grupo) {
-                                                      return $grupo->count();
-                                                  });
 
             // Tendência dos últimos 7 dias
             $tendencia = [];
             for ($i = 6; $i >= 0; $i--) {
                 $data = Carbon::now()->subDays($i)->format('Y-m-d');
                 $sentimentosDia = $sentimentos->filter(function ($sentimento) use ($data) {
-                    return Carbon::parse($sentimento->data_sentimento)->format('Y-m-d') === $data;
+                    return Carbon::parse($sentimento->horario)->format('Y-m-d') === $data;
                 });
 
                 $tendencia[] = [
                     'data' => $data,
                     'total' => $sentimentosDia->count(),
                     'media_intensidade' => $sentimentosDia->count() > 0 ?
-                        round($sentimentosDia->avg('intensidade'), 1) : 0
+                        round($sentimentosDia->avg('nivel_intensidade'), 1) : 0
                 ];
             }
 
@@ -252,7 +242,6 @@ class SentimentoController extends Controller
                     'media_intensidade' => $mediaIntensidade,
                     'emocoes_mais_frequentes' => $emocoesMaisFrequentes,
                     'distribuicao_intensidade' => $distribucaoIntensidade,
-                    'sentimentos_por_categoria' => $sentimentosPorCategoria,
                     'tendencia_7_dias' => $tendencia,
                     'periodo_analise' => $periodo . ' dias'
                 ],
@@ -292,7 +281,7 @@ class SentimentoController extends Controller
                          $relacionamento->usuario1_id;
 
             $sentimentos = Sentimento::where('user_id', $parceiroId)
-                                    ->orderBy('data_sentimento', 'desc')
+                                    ->orderBy('horario', 'desc')
                                     ->orderBy('created_at', 'desc')
                                     ->get();
 
