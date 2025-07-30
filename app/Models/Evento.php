@@ -137,8 +137,7 @@ class Evento extends Model
     {
         return $query->where('notificar_email', true)
                     ->where('notificacao_enviada', false)
-                    ->where('data_evento', '>', Carbon::now())
-                    ->whereRaw("datetime(data_evento) <= datetime('now', '+' || notificar_minutos_antes || ' minutes')");
+                    ->where('data_evento', '>', Carbon::now());
     }
 
     /**

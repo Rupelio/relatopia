@@ -18,7 +18,15 @@ class ProcessarNotificacoes extends Command
         $this->info('Iniciando processamento de notificações de eventos...');
 
         // Buscar eventos que precisam de notificação
-        $eventos = Evento::pendentesNotificacao()->get();
+        $eventos = Evento::pendentesNotificacao()
+                    ->get()
+                    ->filter(function($evento) {
+                        $agora = Carbon::now();
+                        $tempoNotificacao = Carbon::parse($evento->data_evento)->subMinutes($evento->notificar_minutos_antes);
+
+                        // Verificar se está na janela de notificação (chegou a hora)
+                        return $agora >= $tempoNotificacao;
+                    });
 
         if ($eventos->count() === 0) {
             $this->info('Nenhum evento pendente de notificação encontrado.');
@@ -32,22 +40,30 @@ class ProcessarNotificacoes extends Command
 
         foreach ($eventos as $evento) {
             try {
-                // Verificar se ainda está dentro do prazo de notificação
-                $agora = Carbon::now();
-                $tempoNotificacao = $evento->data_evento->subMinutes($evento->notificar_minutos_antes);
+                // Lista de emails para enviar
+                $emailsParaEnviar = [$evento->usuario->email];
 
-                if ($agora >= $tempoNotificacao && $agora < $evento->data_evento) {
-                    // Enviar email
-                    Mail::to($evento->usuario->email)->send(new NotificacaoEventoMail($evento));
+                // Se for evento compartilhado, adicionar email do parceiro
+                if ($evento->tipo === 'compartilhado' && $evento->relacionamento) {
+                    $parceiro = $evento->relacionamento->user_id_1 === $evento->usuario_id
+                        ? $evento->relacionamento->usuario2
+                        : $evento->relacionamento->usuario1;
 
-                    // Marcar como enviada
-                    $evento->marcarNotificacaoEnviada();
-
-                    $this->line("✅ Notificação enviada para: {$evento->usuario->email} - Evento: {$evento->titulo}");
-                    $sucessos++;
-                } else {
-                    $this->line("⏭️ Evento fora do prazo de notificação: {$evento->titulo}");
+                    if ($parceiro && $parceiro->email !== $evento->usuario->email) {
+                        $emailsParaEnviar[] = $parceiro->email;
+                    }
                 }
+
+                // Enviar email para todos os destinatários
+                foreach ($emailsParaEnviar as $email) {
+                    Mail::to($email)->send(new NotificacaoEventoMail($evento));
+                    $this->line("✅ Email enviado: {$evento->titulo} → {$email}");
+                }
+
+                // Marcar como enviada
+                $evento->marcarNotificacaoEnviada();
+                $sucessos++;
+
             } catch (\Exception $e) {
                 $this->error("❌ Erro ao enviar notificação para evento {$evento->id}: {$e->getMessage()}");
                 $erros++;

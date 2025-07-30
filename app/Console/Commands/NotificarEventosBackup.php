@@ -21,9 +21,17 @@ class NotificarEventosBackup extends Command
         $eventos = Evento::where('notificar_email', true)
                     ->where('notificacao_enviada', false)
                     ->where('data_evento', '>', Carbon::now())
-                    ->whereRaw("datetime(data_evento) <= datetime('now', '+' || (notificar_minutos_antes + 2) || ' minutes')")
-                    ->whereRaw("datetime(data_evento) >= datetime('now', '+' || (notificar_minutos_antes - 2) || ' minutes')")
-                    ->get();
+                    ->get()
+                    ->filter(function($evento) {
+                        $agora = Carbon::now();
+                        $tempoNotificacao = Carbon::parse($evento->data_evento)->subMinutes($evento->notificar_minutos_antes);
+
+                        // Verificar se está na janela de notificação (±2 minutos)
+                        return $tempoNotificacao->between(
+                            $agora->copy()->subMinutes(2),
+                            $agora->copy()->addMinutes(2)
+                        );
+                    });
 
         if ($eventos->count() === 0) {
             $this->info('✅ Nenhum evento pendente encontrado no backup.');
