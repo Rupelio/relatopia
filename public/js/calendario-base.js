@@ -827,7 +827,11 @@ function editarEventoDetalhes() {
     document.getElementById('eventoDescricao').value = eventoSelecionado.descricao || '';
 
     const dataEvento = new Date(eventoSelecionado.data_evento);
-    document.getElementById('eventoData').value = dataEvento.toISOString().split('T')[0];
+    // Usar formato local sem conversão UTC
+    const ano = dataEvento.getFullYear();
+    const mes = String(dataEvento.getMonth() + 1).padStart(2, '0');
+    const dia = String(dataEvento.getDate()).padStart(2, '0');
+    document.getElementById('eventoData').value = `${ano}-${mes}-${dia}`;
     document.getElementById('eventoHora').value = dataEvento.toTimeString().slice(0, 5);
 
     document.getElementById('eventoTipo').value = eventoSelecionado.tipo;
@@ -886,10 +890,10 @@ function configurarEventListeners() {
         const formData = new FormData(this);
         const data = Object.fromEntries(formData);
 
-        // Combinar data e hora no formato local (sem conversão UTC)
+        // Combinar data e hora no formato local (sem conversão UTC) - v3
         const dataEvento = new Date(data.data + 'T' + data.hora);
 
-        // Criar string no formato local (YYYY-MM-DD HH:mm:ss)
+        // Criar string no formato local com timezone explícito para Brasil
         const ano = dataEvento.getFullYear();
         const mes = String(dataEvento.getMonth() + 1).padStart(2, '0');
         const dia = String(dataEvento.getDate()).padStart(2, '0');
@@ -897,7 +901,9 @@ function configurarEventListeners() {
         const minuto = String(dataEvento.getMinutes()).padStart(2, '0');
         const segundo = String(dataEvento.getSeconds()).padStart(2, '0');
 
+        // Enviar com indicação de timezone Brasil
         data.data_evento = `${ano}-${mes}-${dia} ${hora}:${minuto}:${segundo}`;
+        data.timezone = 'America/Sao_Paulo';
         delete data.data;
         delete data.hora;
 

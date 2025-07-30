@@ -160,6 +160,16 @@ class EventoController extends Controller
         $dadosEvento['usuario_id'] = $usuario->id;
         $dadosEvento['relacionamento_id'] = null;
 
+        // Tratar data_evento com timezone correto (Brasil)
+        if (isset($dadosEvento['data_evento'])) {
+            // Forçar timezone do Brasil na criação da data
+            $dadosEvento['data_evento'] = Carbon::createFromFormat(
+                'Y-m-d H:i:s',
+                $dadosEvento['data_evento'],
+                'America/Sao_Paulo'
+            )->setTimezone(config('app.timezone'));
+        }
+
         // Se for evento compartilhado, verificar se tem relacionamento ativo
         if ($request->tipo === 'compartilhado') {
             $relacionamento = Relacionamento::where(function($query) use ($usuario) {
@@ -245,6 +255,16 @@ class EventoController extends Controller
             'titulo', 'descricao', 'data_evento', 'tipo', 'categoria',
             'notificar_email', 'notificar_minutos_antes'
         ]);
+
+        // Tratar data_evento com timezone correto (Brasil) na edição também
+        if (isset($dadosEvento['data_evento'])) {
+            // Forçar timezone do Brasil na edição da data
+            $dadosEvento['data_evento'] = Carbon::createFromFormat(
+                'Y-m-d H:i:s',
+                $dadosEvento['data_evento'],
+                'America/Sao_Paulo'
+            )->setTimezone(config('app.timezone'));
+        }
 
         // Se mudou para compartilhado, verificar relacionamento
         if ($request->tipo === 'compartilhado' && $evento->tipo !== 'compartilhado') {
