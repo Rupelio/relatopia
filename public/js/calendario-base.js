@@ -886,9 +886,18 @@ function configurarEventListeners() {
         const formData = new FormData(this);
         const data = Object.fromEntries(formData);
 
-        // Combinar data e hora no formato ISO 8601
+        // Combinar data e hora no formato local (sem conversão UTC)
         const dataEvento = new Date(data.data + 'T' + data.hora);
-        data.data_evento = dataEvento.toISOString().slice(0, 19).replace('T', ' ');
+
+        // Criar string no formato local (YYYY-MM-DD HH:mm:ss)
+        const ano = dataEvento.getFullYear();
+        const mes = String(dataEvento.getMonth() + 1).padStart(2, '0');
+        const dia = String(dataEvento.getDate()).padStart(2, '0');
+        const hora = String(dataEvento.getHours()).padStart(2, '0');
+        const minuto = String(dataEvento.getMinutes()).padStart(2, '0');
+        const segundo = String(dataEvento.getSeconds()).padStart(2, '0');
+
+        data.data_evento = `${ano}-${mes}-${dia} ${hora}:${minuto}:${segundo}`;
         delete data.data;
         delete data.hora;
 
