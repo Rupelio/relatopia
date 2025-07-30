@@ -3,7 +3,6 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="google-adsense-account" content="ca-pub-3613355728057212">
         <title>Relatopia</title>
 
         <!-- Favicon -->
@@ -17,8 +16,6 @@
 
         <!-- Styles / Scripts -->
         <script src="https://cdn.tailwindcss.com"></script>
-        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3613355728057212"
-     crossorigin="anonymous"></script>
     </head>
     <body class="bg-gray-50 min-h-screen">
         <nav class="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-emerald-100 z-50 shadow-sm">
