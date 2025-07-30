@@ -90,7 +90,7 @@ class ListaDesejoController extends Controller
         $validated = $request->validate([
             'titulo' => 'required|string|max:255',
             'descricao' => 'nullable|string|max:1000',
-            'link_compra' => 'nullable|url|max:500',
+            'link_compra' => 'nullable|url',
             'preco_estimado' => 'nullable|numeric|min:0|max:999999.99',
             'prioridade' => 'required|in:baixa,media,alta'
         ]);
